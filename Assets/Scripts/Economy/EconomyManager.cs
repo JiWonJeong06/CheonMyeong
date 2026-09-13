@@ -71,5 +71,21 @@ namespace TowerDefense.Economy
             PlayerPrefs.SetInt(GemKey, Gem);
             OnGemChanged?.Invoke(Gem);
         }
+
+        /// <summary>
+        /// [디버그 전용] 재화를 더미 시작값으로 되돌림 - QA 테스트 중 해금/구매를 반복 확인하기 위한 기능.
+        /// TechTree의 "[테스트] 초기화" 버튼(TechTreeManager.DebugResetAllPurchases)에서 호출됨.
+        /// 출시 전에 호출부(UI 버튼 포함)와 함께 반드시 제거할 것.
+        /// </summary>
+        [ContextMenu("Debug: Reset Currency")]
+        public void DebugResetCurrency()
+        {
+            Gold = DummyStartGold;
+            Gem = DummyStartGem;
+            PlayerPrefs.SetInt(GoldKey, Gold);
+            PlayerPrefs.SetInt(GemKey, Gem);
+            OnGoldChanged?.Invoke(Gold);
+            OnGemChanged?.Invoke(Gem);
+        }
     }
 }

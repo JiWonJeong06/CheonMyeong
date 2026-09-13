@@ -28,5 +28,11 @@ namespace TowerDefense.Data
 
         // 이 노드를 열려면 먼저 해금돼 있어야 하는 노드 id 목록. 비어있으면 최초 노드(선행 조건 없음).
         public List<string> prerequisiteNodeIds;
+
+        // 비어있으면 순수 스탯 강화 노드. 값이 있으면 "캐릭터 해금 노드"라는 뜻이고, 이 필드는
+        // CharacterDataSO.characterId를 가리킴 - 이런 노드는 TechTreeManager가 JSON이 아니라
+        // CharacterDatabase를 보고 캐릭터 수만큼 런타임에 자동으로 만들어서 넣어줌(JSON엔 안 써도 됨).
+        // 해금 여부/비용/통화(Gold or Gem)는 전부 CharacterUnlockManager/CharacterDataSO 쪽 값을 그대로 따름.
+        public string linkedCharacterId;
     }
 }

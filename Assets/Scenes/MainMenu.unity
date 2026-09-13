@@ -302,6 +302,7 @@ GameObject:
   - component: {fileID: 1135344934}
   - component: {fileID: 890620971}
   - component: {fileID: 825901256}
+  - component: {fileID: 890620972}
   m_Layer: 0
   m_Name: GameManagers
   m_TagString: Untagged
@@ -357,6 +358,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8f50f15ce424987bd82d95daf182a2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.TechTreeManager
+--- !u!114 &890620972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1135344933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5760d53016fe41f2a8ce027920c1f96c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.DeckManager
 --- !u!4 &1135344936
 Transform:
   m_ObjectHideFlags: 0
@@ -700,7 +713,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d56e4bed549b468b926cfaa319520a21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.UI.InventoryController
-  confirmDialog: {fileID: 476090406}
 --- !u!114 &353710184
 MonoBehaviour:
   m_ObjectHideFlags: 0

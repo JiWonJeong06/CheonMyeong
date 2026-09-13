@@ -77,6 +77,19 @@ namespace TowerDefense.Data
             Save();
         }
 
+        /// <summary>
+        /// [디버그 전용] 해금 기록을 전부 지움 - QA 테스트 중 해금 흐름을 반복 확인하기 위한 기능.
+        /// TechTree의 "[테스트] 초기화" 버튼(TechTreeManager.DebugResetAllPurchases)에서 호출됨.
+        /// 출시 전에 호출부(UI 버튼 포함)와 함께 반드시 제거할 것.
+        /// </summary>
+        [ContextMenu("Debug: Reset Unlocks")]
+        public void DebugResetUnlocks()
+        {
+            _unlockedIds.Clear();
+            Save();
+            OnCharacterUnlocked?.Invoke(null);
+        }
+
         private void Load()
         {
             _unlockedIds.Clear();

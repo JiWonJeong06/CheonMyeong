@@ -8,6 +8,7 @@
             <ui:VisualElement name="techtree-toolbar" class="techtree-toolbar">
                 <ui:Label text="검색" class="techtree-search-label" />
                 <ui:TextField name="techtree-search-field" class="techtree-search-field" />
+                <ui:Button name="debug-reset-button" text="[테스트] 초기화" class="debug-reset-button" />
             </ui:VisualElement>
 
             <ui:VisualElement name="techtree-canvas" class="techtree-canvas" />
