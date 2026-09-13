@@ -1,0 +1,63 @@
+/* 모든 팝업이 공유하는 기본 뼈대 스타일.
+   각 팝업의 UIDocument Style Sheets 리스트에 이 파일을 반드시 같이 등록할 것. */
+
+.popup-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.55);
+}
+
+.popup-box {
+    min-width: 320px;
+    padding: 24px;
+    background-color: rgb(40, 40, 48);
+    border-radius: 10px;
+    align-items: center;
+}
+
+.popup-title {
+    color: rgb(255, 255, 255);
+    font-size: 20px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    margin-bottom: 20px;
+}
+
+.popup-close-button {
+    width: 120px;
+    height: 36px;
+}
+
+.button-row {
+    flex-direction: row;
+    justify-content: center;
+}
+
+.app-button {
+    width: 120px;
+    height: 40px;
+    margin: 0 8px;
+}
+
+/* 토스트 (논블로킹 알림) */
+.toast-root {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 60px;
+    align-items: center;
+}
+
+.toast-label {
+    background-color: rgba(0, 0, 0, 0.75);
+    color: rgb(255, 255, 255);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+}

@@ -1,0 +1,34 @@
+{
+  "characters": [
+    {
+      "characterId": "char_001",
+      "displayName": "견습 궁수",
+      "description": "기본 원거리 캐릭터. 예시용 더미 데이터.",
+      "characterTag": "Ranged",
+      "baseDamage": 12.0,
+      "range": 5.5,
+      "attackSpeed": 1.2,
+      "summonCost": 50,
+      "unlockCost": 100,
+      "unlockCurrency": "Gold",
+      "skills": [
+        {
+          "skillId": "char_001_skill_01",
+          "skillName": "속사",
+          "description": "짧은 시간 동안 공격속도가 증가한다.",
+          "cooldown": 8.0,
+          "value": 0.3,
+          "skillType": "Buff"
+        },
+        {
+          "skillId": "char_001_skill_02",
+          "skillName": "관통 화살",
+          "description": "일직선상의 적을 모두 관통하는 강화 공격을 1회 시전한다.",
+          "cooldown": 12.0,
+          "value": 25.0,
+          "skillType": "Attack"
+        }
+      ]
+    }
+  ]
+}

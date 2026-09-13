@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Common/Common.uss?fileID=7433441132597879392&amp;guid=dae192441ed51e44bafe4c47767337eb&amp;type=3#Common"/>
+    <ui:VisualElement name="popup-root" class="popup-root">
+        <ui:VisualElement class="popup-box">
+            <ui:Label text="상점 (준비중)" class="popup-title"/>
+            <ui:Button name="close-button" text="닫기" class="popup-close-button"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

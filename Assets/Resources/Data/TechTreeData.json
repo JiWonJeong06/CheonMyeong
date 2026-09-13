@@ -1,0 +1,49 @@
+{
+  "nodes": [
+    {
+      "nodeId": "node_001",
+      "displayName": "공격력 강화 I",
+      "description": "전체 캐릭터 공격력 소폭 증가 (더미).",
+      "cost": 100,
+      "gridX": 0,
+      "gridY": 0,
+      "prerequisiteNodeIds": []
+    },
+    {
+      "nodeId": "node_002",
+      "displayName": "공격력 강화 II",
+      "description": "전체 캐릭터 공격력 추가 증가 (더미).",
+      "cost": 150,
+      "gridX": 1,
+      "gridY": 0,
+      "prerequisiteNodeIds": ["node_001"]
+    },
+    {
+      "nodeId": "node_003",
+      "displayName": "공격력 강화 III",
+      "description": "전체 캐릭터 공격력 최종 증가 (더미).",
+      "cost": 200,
+      "gridX": 2,
+      "gridY": 0,
+      "prerequisiteNodeIds": ["node_002"]
+    },
+    {
+      "nodeId": "node_004",
+      "displayName": "체력 강화 I",
+      "description": "전체 캐릭터 체력 소폭 증가 (더미).",
+      "cost": 150,
+      "gridX": 0,
+      "gridY": 1,
+      "prerequisiteNodeIds": ["node_001"]
+    },
+    {
+      "nodeId": "node_005",
+      "displayName": "복합 강화",
+      "description": "공격력/체력 강화를 동시에 요구하는 상위 노드 (더미).",
+      "cost": 250,
+      "gridX": 1,
+      "gridY": 1,
+      "prerequisiteNodeIds": ["node_002", "node_004"]
+    }
+  ]
+}

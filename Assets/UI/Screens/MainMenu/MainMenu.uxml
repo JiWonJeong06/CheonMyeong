@@ -1,0 +1,29 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Common/Common.uss?fileID=7433441132597879392&amp;guid=dae192441ed51e44bafe4c47767337eb&amp;type=3#Common"/>
+    <Style src="project://database/Assets/UI/Screens/MainMenu/MainMenu.uss?fileID=7433441132597879392&amp;guid=4c980ebdbdec0834eb19abad9420c5bf&amp;type=3#MainMenu"/>
+    <ui:VisualElement name="root" class="main-root">
+        <ui:VisualElement name="top-bar" class="top-bar">
+            <ui:VisualElement class="currency-item">
+                <ui:Label text="G" class="currency-icon"/>
+                <ui:Label name="gold-label" text="0" class="currency-value"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="currency-item">
+                <ui:Label text="◆" class="currency-icon"/>
+                <ui:Label name="gem-label" text="0" class="currency-value"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="center-display" class="center-display">
+            <ui:Label text="캐릭터 프리뷰 자리 (더미)" class="placeholder-text"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="side-buttons" class="side-buttons">
+            <ui:Button name="settings-button" text="설정" class="app-button"/>
+            <ui:Button name="techtree-button" text="테크트리" class="app-button"/>
+            <ui:Button name="shop-button" text="상점" class="app-button"/>
+            <ui:Button name="inventory-button" text="보관함" class="app-button"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="bottom-bar" class="bottom-bar">
+            <ui:Button name="play-button" text="PLAY" class="play-button"/>
+            <ui:Label text="v0.0.1 (dummy)" class="version-label"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

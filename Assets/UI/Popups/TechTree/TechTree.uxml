@@ -1,0 +1,20 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Common/Common.uss?fileID=7433441132597879392&amp;guid=dae192441ed51e44bafe4c47767337eb&amp;type=3#Common"/>
+    <Style src="project://database/Assets/UI/Popups/TechTree/TechTree.uss?fileID=7433441132597879392&amp;guid=30e8599504af49e8851c6402c5bb7270&amp;type=3#TechTree"/>
+    <ui:VisualElement name="popup-root" class="popup-root">
+        <ui:VisualElement class="popup-box techtree-box">
+            <ui:Label text="테크트리 (노드 강화)" class="popup-title" />
+
+            <ui:VisualElement name="techtree-toolbar" class="techtree-toolbar">
+                <ui:Label text="검색" class="techtree-search-label" />
+                <ui:TextField name="techtree-search-field" class="techtree-search-field" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="techtree-canvas" class="techtree-canvas" />
+
+            <ui:Label text="선택한 노드를 눌러 골드로 해금하세요 (빈 공간을 드래그하면 화면을 옮길 수 있습니다)" class="techtree-hint" />
+
+            <ui:Button name="close-button" text="닫기" class="popup-close-button" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
