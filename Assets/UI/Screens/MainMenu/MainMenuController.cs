@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 using TowerDefense.Economy;
+using TowerDefense.Network;
 
 namespace TowerDefense.UI
 {
@@ -15,6 +16,9 @@ namespace TowerDefense.UI
 
         [Tooltip("보관함 팝업 GameObject (하이어라키에서 기본 비활성화 상태)")]
         [SerializeField] private InventoryController inventoryPopup;
+
+        [Tooltip("매칭 대기 팝업 GameObject (하이어라키에서 기본 비활성화 상태)")]
+        [SerializeField] private MatchmakingOverlayController matchmakingOverlay;
 
         private UIDocument _document;
         private Label _goldLabel;
@@ -82,8 +86,24 @@ namespace TowerDefense.UI
         private void UpdateGoldLabel(int value) => _goldLabel.text = value.ToString();
         private void UpdateGemLabel(int value) => _gemLabel.text = value.ToString();
 
-        private void OnPlayClicked() =>
-            Debug.Log("[MainMenu] Play 버튼 - 스테이지 선택 화면으로 연결 예정 (팀 연동 필요, 아직 더미)");
+        // 스테이지는 서버(MatchController.OnNetworkSpawn)가 무작위로 고르는 구조라 스테이지 선택
+        // 화면 자체가 필요 없음 - Play를 누르면 바로 매칭을 시작함.
+        private void OnPlayClicked()
+        {
+            if (MatchmakingService.Instance == null)
+            {
+                Debug.LogError("[MainMenu] MatchmakingService가 씬에 없음 - 매칭을 시작할 수 없음.");
+                return;
+            }
+            if (matchmakingOverlay == null)
+            {
+                Debug.LogError("[MainMenu] matchmakingOverlay가 인스펙터에 연결 안 됨.");
+                return;
+            }
+
+            matchmakingOverlay.Open();
+            MatchmakingService.Instance.StartMatchmaking();
+        }
 
         private void OnSettingsClicked() =>
             Debug.Log("[MainMenu] 설정 버튼 - 다른 개발자 담당이라 더미 로그만 찍음");

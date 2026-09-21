@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_002
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  characterId: char_002
+  displayName: "\uBC29\uD328 \uC804\uC0AC"
+  description: "\uADFC\uC811 \uD0F1\uCEE4 \uCE90\uB9AD\uD130. \uC778\uAC8C\uC784
+    \uD14C\uC2A4\uD2B8\uC6A9 \uB354\uBBF8 \uB370\uC774\uD130."
+  characterTag: Melee
+  baseDamage: 8
+  range: 1.3
+  attackSpeed: 0.9
+  summonCost: 60
+  unlockCost: 100
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}
+  skills:
+  - skillId: char_002_skill_01
+    skillName: "\uCCA0\uBCBD"
+    description: "\uC9E7\uC740 \uC2DC\uAC04 \uB3D9\uC548 \uBC1B\uB294 \uD53C\uD574\uAC00
+      \uAC10\uC18C\uD55C\uB2E4."
+    cooldown: 10
+    value: 0.4
+    skillType: Buff
+  - skillId: char_002_skill_02
+    skillName: "\uBC29\uD328 \uAC15\uD0C0"
+    description: "\uC804\uBC29\uC758 \uC801\uC5D0\uAC8C \uAC15\uD55C \uD55C \uBC29
+      \uD53C\uD574\uB97C \uC900\uB2E4."
+    cooldown: 9
+    value: 20
+    skillType: Attack
