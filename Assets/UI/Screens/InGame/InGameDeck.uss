@@ -1,0 +1,59 @@
+/* 인게임 화면 오른쪽에 고정된 덱(핸드) 패널 - 5개 카드 슬롯을 세로로 나열함.
+   InGameHUD와 마찬가지로 항상 떠있는 상시 UI(모달 팝업 아님)라 sortingOrder는 0으로 HUD와 동일하게 둘 것. */
+
+.deck-root {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 160px;
+    padding: 12px 10px;
+    background-color: rgba(20, 20, 24, 0.85);
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.deck-slot {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 12px;
+    padding: 0;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.08);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* 카드가 배정 안 된 빈 슬롯 - 클릭은 막지 않되(추후 편성 진입 등에 쓸 수 있게) 흐리게 표시함. */
+.deck-slot-empty {
+    opacity: 0.35;
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+
+/* 지금 선택된 카드 - TowerPlacementController.SetSelectedCharacter로 넘어간 상태와 항상 일치해야 함. */
+.deck-slot-selected {
+    border-color: rgb(255, 210, 80);
+    border-width: 3px;
+}
+
+/* SP가 소환 비용(MatchResourceManager.SummonSpCost, 고정 10)보다 적어서 지금 당장은 못 놓는 카드 -
+   선택 자체는 막지 않음(실제 배치 시점의 최종 판정은 어차피 서버가 함,
+   TowerPlacementController/MatchController.RequestPlaceTowerRpc 참고). */
+.deck-slot-unaffordable {
+    opacity: 0.5;
+}
+
+/* 5개 카드 슬롯 아래 남는 공간에 뜨는 누적 SP 소모량 표시(순수 디스플레이용 - InGameDeckController 참고). */
+.sp-spent-label {
+    margin-top: 16px;
+    padding: 6px 10px;
+    background-color: rgba(0, 0, 0, 0.4);
+    color: rgb(255, 210, 80);
+    font-size: 13px;
+    -unity-font-style: bold;
+    border-radius: 6px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}

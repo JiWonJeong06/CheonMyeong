@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d401074f7c3b1347b988bec0c40b7d3, type: 3}
+  m_Name: Boss_BakSanBal
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Monsters.MonsterDataSO
+  monsterId: boss_bak_san_bal
+  displayName: "\uBC15\uC0B0\uBC1C"
+  maxHp: 10
+  hpMultiplier: 1
+  moveSpeedMultiplier: 1
+  moveSpeed: 2
+  spawnWeight: 0
+  isBoss: 1
+  goldReward: 5
+  damageToBase: 2
+  prefab: {fileID: 5542756559366482663, guid: 247c58b82b75c834db37931311e33028, type: 3}
+  iconSprite: {fileID: 0}
+  abilityName: "\uBD84\uC2E0"
+  abilityDescription: "\uC0AC\uB9DD \uC2DC \uBD84\uC2E0 2\uBA85 \uC18C\uD658 (\uCD5C\uB300
+    2\uD68C)"

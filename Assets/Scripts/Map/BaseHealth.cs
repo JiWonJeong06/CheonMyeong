@@ -21,8 +21,8 @@ namespace TowerDefense.Map
     {
         [SerializeField] private MonsterSpawner spawner;
 
-        [Tooltip("더미: 실제 밸런스 확정 전 - 기지 최대 체력")]
-        [SerializeField] private int maxHp = 20;
+        [Tooltip("천명.pptx 확정값: 라이프 3 (경로 끝 도달 몬스터 -1, 보스 -2, 0 이하면 패배)")]
+        [SerializeField] private int maxHp = 3;
 
         public int CurrentHp { get; private set; }
         public int MaxHp => maxHp;

@@ -70,7 +70,7 @@
       "attackSpeed": 0.7,
       "summonCost": 70,
       "unlockCost": 150,
-      "unlockCurrency": "Gem",
+      "unlockCurrency": "Gold",
       "skills": [
         {
           "skillId": "char_003_skill_01",
@@ -130,7 +130,7 @@
       "attackSpeed": 1.0,
       "summonCost": 55,
       "unlockCost": 130,
-      "unlockCurrency": "Gem",
+      "unlockCurrency": "Gold",
       "skills": [
         {
           "skillId": "char_005_skill_01",

@@ -19,13 +19,19 @@ namespace TowerDefense.UI
         private Label _messageLabel;
         private Coroutine _hideCoroutine;
 
+        // [버그 수정 - 2026-09-29] 예전엔 "Instance가 이미 있으면 자멸"하는 first-wins였음. 이
+        // 컴포넌트는 DontDestroyOnLoad가 아닌 씬 로컬 싱글턴(MainMenu/InGame 각자 하나씩)인데,
+        // Netcode의 NetworkSceneManager는 LoadSceneMode.Single 전환도 내부적으로 새 씬을 먼저
+        // additive로 로드한 뒤 이전 씬을 나중에 언로드함(NGO 공식 동작) - 그 사이 InGame 씬의
+        // ToastController.Awake()가 실행되면 "아직 안 죽은 MainMenu 쪽 Instance"를 보고 자멸해버려,
+        // Instance가 영원히 곧 파괴될 MainMenu 오브젝트를 가리키게 됨. 그러면 InGame에서
+        // Show()를 호출해도 _document/_messageLabel이 그 죽은 오브젝트 것이라 항상
+        // "초기화 안 된 상태" 경고만 찍히고 토스트가 실제로 안 뜸(PopupManager.cs의 같은 버그
+        // 수정 설명 참고 - CloseAll()이 죽은 팝업을 건드리다 예외를 던진 것과 동일한 근본 원인).
+        // 그래서 first-wins를 last-wins로 바꿈 - 나중에 깨어난(=나중에 로드된) 씬의 인스턴스가
+        // 항상 이김.
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
             Instance = this;
         }
 

@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e899abeff4a4df3bb5d1500cb276087, type: 3}
+  m_Name: Wave_03
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Monsters.WaveDataSO
+  waveName: "Wave 03 (\uC120\uD615\uBCF4\uAC04 placeholder)"
+  delayBeforeWave: 5
+  waveDuration: 80
+  ownMonsterCount: 150
+  monsterPool:
+  - {fileID: 11400000, guid: 90628f1d57827e540a9491ff5c83a33d, type: 2}
+  - {fileID: 11400000, guid: 19ecc03e1d717df40bb34ac45a9e489c, type: 2}
+  - {fileID: 11400000, guid: 05541bee120168f4f98ed2a1fb3fd922, type: 2}
+  bossPool:
+  - {fileID: 11400000, guid: a7e5e1dac13375a438e17692e087ada7, type: 2}
+  - {fileID: 11400000, guid: 214a3507abbf93349afe8757dbc1c3e4, type: 2}
+  - {fileID: 11400000, guid: ccd5e6bb43188c34d80a49e224f67a2b, type: 2}
+  - {fileID: 11400000, guid: 0f51c371a3210854194329b671f0bea5, type: 2}
+  - {fileID: 11400000, guid: fc88e065f3d0ee74bafa1c8b35d1470e, type: 2}
+  - {fileID: 11400000, guid: ebbe6ee3635fd20428efb82fdfbb3ce9, type: 2}
+  - {fileID: 11400000, guid: 0d76e81f3061e3943a04c347dff85144, type: 2}
+  - {fileID: 11400000, guid: 866898905030bb843964e917960d692e, type: 2}
+  - {fileID: 11400000, guid: 28db0c79fe5d79c4498b14898da452b7, type: 2}
+  soldierBaselineHp: 175
+  bossBaselineHp: 14900

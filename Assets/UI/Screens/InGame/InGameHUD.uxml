@@ -19,6 +19,10 @@
                 <ui:Label name="my-sp-text" text="0/0" class="stat-value"/>
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="pause-button-wrapper" class="hud-pause-wrapper">
+            <ui:Label name="season-weather-label" text="- · -" class="season-weather-label"/>
+            <ui:Button name="pause-button" text="II" class="hud-pause-button"/>
+        </ui:VisualElement>
         <ui:VisualElement name="enemy-panel" class="hud-panel hud-panel-enemy">
             <ui:Label text="상대 기지" class="hud-panel-title"/>
             <ui:VisualElement class="stat-row">
@@ -37,4 +41,5 @@
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
+    <ui:VisualElement name="vision-block-overlay" class="vision-block-overlay" picking-mode="Ignore"/>
 </ui:UXML>

@@ -127,6 +127,25 @@ namespace TowerDefense.Data
             !string.IsNullOrEmpty(characterId) && _draft.Contains(characterId);
 
         /// <summary>
+        /// 실제 대전(인게임)에서 써야 할 덱 - 편집 중인 임시본(_draft)이 아니라 마지막으로 "편성 저장"을
+        /// 눌러 확정된 프리셋을 돌려줌. 인게임 덱 UI(InGameDeckController)는 반드시 이걸 써야 함 -
+        /// GetDraftDeck()은 보관함 편성 화면 전용이고, 저장 안 한 편집 중 상태를 그대로 노출하기 때문에
+        /// 게임플레이에 쓰면 "편성 화면을 열어놨다가 저장 안 하고 나간 상태"가 그대로 반영되는 버그가 생김.
+        /// 슬롯이 비어있을 수 있음(한 번도 저장 안 한 프리셋) - 호출 쪽에서 null 체크할 것.
+        /// </summary>
+        public IReadOnlyList<string> GetActiveDeck() => _savedPresets[ActivePresetIndex];
+
+        // 덱 슬롯을 직접 클릭해서 비울 때 사용 (임시 편집본만 변경됨).
+        public void ClearSlot(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= DeckSize) return;
+            if (_draft[slotIndex] == null) return;
+
+            _draft[slotIndex] = null;
+            OnDeckChanged?.Invoke();
+        }
+
+        /// <summary>
         /// 로스터에서 캐릭터를 눌렀을 때 호출함. 이미 편집 중인 편성에 들어있으면 빼고(토글 off),
         /// 없으면 빈 슬롯에 채움(토글 on). 이 변경은 저장 버튼을 누르기 전까지는 임시 편집본에만 남음.
         /// 빈 슬롯이 없으면 false를 반환해서 호출 쪽에서 "편성 인원이 가득 찼습니다" 안내를 띄울 수 있게 함.
@@ -147,16 +166,6 @@ namespace TowerDefense.Data
             _draft[emptyIndex] = characterId;
             OnDeckChanged?.Invoke();
             return true;
-        }
-
-        // 덱 슬롯을 직접 클릭해서 비울 때 사용 (임시 편집본만 변경됨).
-        public void ClearSlot(int slotIndex)
-        {
-            if (slotIndex < 0 || slotIndex >= DeckSize) return;
-            if (_draft[slotIndex] == null) return;
-
-            _draft[slotIndex] = null;
-            OnDeckChanged?.Invoke();
         }
     }
 }

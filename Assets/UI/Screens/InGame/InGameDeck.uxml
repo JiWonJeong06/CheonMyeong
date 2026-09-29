@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Common/Common.uss?fileID=7433441132597879392&amp;guid=dae192441ed51e44bafe4c47767337eb&amp;type=3#Common"/>
+    <Style src="project://database/Assets/UI/Screens/InGame/InGameDeck.uss?fileID=7433441132597879392&amp;guid=56426773466152643a2b363af6783d36&amp;type=3#InGameDeck"/>
+    <ui:VisualElement name="deck-root" class="deck-root">
+        <!-- 슬롯 개수(5)는 DeckManager.DeckSize와 반드시 같아야 함 - 기획 확정으로 DeckSize가 바뀌면
+             여기 슬롯도 같이 늘리거나 줄일 것(InGameDeckController.cs 상단 주석 참고).
+             [기획 확정] 캐릭터별 개별 SP 비용 표시(cost 배지)는 제거함 - 소환 비용이 항상 고정 10으로
+             통일되면서 카드마다 다른 숫자를 보여줄 이유가 없어짐(MatchResourceManager.SummonSpCost 참고,
+             전체 소모량은 이 패널 맨 아래 sp-spent-label 하나로만 보여줌). -->
+        <ui:Button name="deck-slot-0" class="deck-slot"/>
+        <ui:Button name="deck-slot-1" class="deck-slot"/>
+        <ui:Button name="deck-slot-2" class="deck-slot"/>
+        <ui:Button name="deck-slot-3" class="deck-slot"/>
+        <ui:Button name="deck-slot-4" class="deck-slot"/>
+        <!-- 5개 슬롯(120px*5 + margin) 아래 남는 공간에 배치함 - deck-root가 flex-column이라 순서상
+             자동으로 맨 아래에 옴. 값 자체는 소환 시(TowerPlacementController.OnTowerPlaced)마다
+             MatchResourceManager.SummonSpCost(고정 10)만큼 늘어나는 순수 표시용 누적 카운터임
+             (InGameDeckController.cs 참고). -->
+        <ui:Label name="sp-spent-label" text="SP 소모: 0" class="sp-spent-label"/>
+    </ui:VisualElement>
+</ui:UXML>

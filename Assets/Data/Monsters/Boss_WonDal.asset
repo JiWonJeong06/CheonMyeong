@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d401074f7c3b1347b988bec0c40b7d3, type: 3}
+  m_Name: Boss_WonDal
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Monsters.MonsterDataSO
+  monsterId: boss_won_dal
+  displayName: "\uC6D0\uB2EC"
+  maxHp: 10
+  hpMultiplier: 1
+  moveSpeedMultiplier: 1
+  moveSpeed: 2
+  spawnWeight: 0
+  isBoss: 1
+  goldReward: 5
+  damageToBase: 2
+  prefab: {fileID: 5542756559366482663, guid: 247c58b82b75c834db37931311e33028, type: 3}
+  iconSprite: {fileID: 0}
+  abilityName: "\uB2EC"
+  abilityDescription: "\uADFC\uAC70\uB9AC \uACF5\uACA9 \uBB34\uD6A8"

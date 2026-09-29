@@ -52,6 +52,11 @@ namespace TowerDefense.Map
 
         public bool IsOccupied(Vector3Int cell) => _occupiedCells.ContainsKey(cell);
 
+        /// <summary>이 그리드의 칸 하나 크기(월드 단위). Tilemap이 GridLayout을 상속해서 자기 칸 크기를
+        /// 직접 들고 있음 - 배치된 오브젝트를 "타일 한 칸에 맞춤" 스케일링할 때 씀(MatchController.
+        /// FitVisualToCell 참고). buildableTilemap이 없으면 안전하게 (1,1,1)을 돌려줌.</summary>
+        public Vector3 CellSize => buildableTilemap != null ? buildableTilemap.cellSize : Vector3.one;
+
         /// <summary>이 칸에 새로 타워를 지을 수 있는지 - 배치 가능 타일 위에 있고, 경로가 아니고, 비어있어야 함.</summary>
         public bool IsBuildable(Vector3Int cell)
         {

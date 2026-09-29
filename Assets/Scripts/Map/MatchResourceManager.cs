@@ -8,7 +8,15 @@ namespace TowerDefense.Map
     /// <summary>
     /// 인게임(대전) 전용 자원인 SP(소환 포인트)를 관리함. EconomyManager의 골드/보석과는 완전히
     /// 별개 자원임 - EconomyManager 자체 doc comment에도 "SP는 여기서 다루지 않음"이라고 명시돼
-    /// 있어서 이 매니저를 새로 둠. CharacterDataSO.summonCost가 이 SP를 기준으로 함.
+    /// 있어서 이 매니저를 새로 둠.
+    ///
+    /// [기획 확정 - 소환 비용 고정] 원래는 CharacterDataSO.summonCost(캐릭터별 개별 값)를 SP 차감
+    /// 기준으로 썼는데, 기획 쪽에서 "소환할 때마다 전체 SP 소모가 고정 10 증가"로 확정하면서 캐릭터별
+    /// 개별 SP 비용이 불필요해짐 - 그래서 실제 차감량은 이 클래스의 SummonSpCost 상수 하나로
+    /// 통일함(TowerPlacementController의 로컬 사전 체크, MatchController.RequestPlaceTowerRpc의 서버
+    /// 차감/환불이 전부 이 상수를 씀). CharacterDataSO.summonCost 필드 자체는 그대로 남겨뒀지만
+    /// (다른 용도로 나중에 재활용될 수 있어 JSON 스키마를 건드리지 않음) 지금은 SP 차감 계산 어디에도
+    /// 안 쓰임 - 혼동하지 말 것.
     ///
     /// [1:1 대전 구조 확정에 따른 변경] 예전엔 Instance 싱글턴이었는데, 보드가 두 개(내 보드/상대
     /// 보드) 동시에 존재하니 싱글턴을 없앰 - PlayerBoard가 자기 보드의 인스턴스를 직접 들고 있음.
@@ -23,9 +31,13 @@ namespace TowerDefense.Map
     /// </summary>
     public class MatchResourceManager : MonoBehaviour
     {
-        // 기존 CharacterDataSO 더미 데이터(char_001 등)의 summonCost가 이미 50 단위 스케일로
-        // 들어가 있어서(Assets/Data/Characters.json 참고), 여기 최대치/충전량도 그 스케일에 맞춤.
-        [Tooltip("더미: 실제 밸런스 확정 전 - SP 최대치 (캐릭터 summonCost 스케일에 맞춤)")]
+        /// <summary>소환 1회당 고정 SP 소모량 - 기획 확정값(캐릭터 종류와 무관하게 항상 10).
+        /// TowerPlacementController(로컬 사전 체크)와 MatchController.RequestPlaceTowerRpc(서버 실제
+        /// 차감/환불), InGameDeckController(카드 흐림 표시 + "SP 소모" 누적 카운터)가 전부 이 값
+        /// 하나만 참조함 - 여러 곳에 값이 흩어지면 나중에 밸런스 바뀔 때 어긋나기 쉬워서 한 곳으로 모음.</summary>
+        public const float SummonSpCost = 10f;
+
+        [Tooltip("더미: 실제 밸런스 확정 전 - SP 최대치")]
         [SerializeField] private float maxSP = 100f;
 
         [Tooltip("더미: 실제 밸런스 확정 전 - 초당 자동 충전량")]

@@ -15,8 +15,10 @@ namespace TowerDefense.Economy
 
         private const string GoldKey = "Economy_Gold";
         private const string GemKey = "Economy_Gem";
-        private const int DummyStartGold = 1000;
-        private const int DummyStartGem = 100;
+        // [테스트용 임시 상향] 캐릭터 5종 전체 해금 비용 합(600) + 테크트리 등 다른 소모처를 감안해
+        // 넉넉하게 잡음 - 실제 밸런스 확정 전 더미값이라 최종 출시 전에 반드시 재조정할 것.
+        private const int DummyStartGold = 99999;
+        private const int DummyStartGem = 99999;
 
         public int Gold { get; private set; }
         public int Gem { get; private set; }

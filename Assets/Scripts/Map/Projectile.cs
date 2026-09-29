@@ -53,6 +53,11 @@ namespace TowerDefense.Map
             if (Vector3.Distance(transform.position, targetPos) <= hitDistance)
             {
                 _target.TakeDamage(_damage);
+                // [버그 수정 - 2026-09-29] TowerUnit.cs 히트스캔 경로와 동일한 시각 피드백 -
+                // 지금은 실제로 쓰이는 투사체 프리팹이 없어서(Tower_Generic.prefab의
+                // projectilePrefab이 비어있음) 당장 발동하진 않지만, 나중에 투사체가 실제로
+                // 쓰이게 되면 동일하게 "맞았다"는 걸 보여줘야 하므로 미리 맞춰둠.
+                _target.PlayHitFlashRpc();
                 DespawnSelf();
             }
         }

@@ -22,7 +22,7 @@ MonoBehaviour:
   attackSpeed: 1
   summonCost: 55
   unlockCost: 130
-  unlockCurrency: 1
+  unlockCurrency: 0
   iconSprite: {fileID: 0}
   portraitSprite: {fileID: 0}
   skills:

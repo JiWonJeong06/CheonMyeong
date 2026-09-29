@@ -14,9 +14,11 @@ namespace TowerDefense.UI
     /// 끝난 뒤(RankManager.ReportMatchResult, MatchmakingService.LeaveMatchAsync) 이 이벤트가
     /// 발생하므로, 여기서는 화면 표시 + 확인 시 메인메뉴 복귀만 책임짐.
     ///
-    /// PopupManager는 MainMenu 씬 전용 싱글턴이라 InGame 씬에선 그 스택을 안 거침 - 여기선 매치가
-    /// 끝나면 뜨는 결과 화면 하나뿐이라 스택 관리가 필요 없어서 UIDocument의 style.display만 직접
-    /// 토글함(ToastController와 같은 방식).
+    /// InGame 씬에도 이제 PopupManager(일시정지 메뉴, 항복 확인창)가 있지만, 이 결과 화면은 일부러
+    /// 그 스택을 안 거침 - ESC로 닫히면 안 되고(매치가 끝났는데 취소할 방법이 없어야 함), 뭐가 열려
+    /// 있든 무조건 최상단에 떠야 하기 때문. 대신 매치가 끝나는 순간 PopupManager.CloseAll()로 다른
+    /// 팝업(일시정지 메뉴 등)을 먼저 정리해서, 이 결과 화면 아래에 다른 팝업이 파묻혀 남아있는 일이
+    /// 없도록 함. 그래서 UIDocument의 style.display만 직접 토글함(ToastController와 같은 방식).
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public class MatchResultController : MonoBehaviour
@@ -71,6 +73,10 @@ namespace TowerDefense.UI
 
         private void HandleMatchEnded(bool won)
         {
+            // 일시정지 메뉴/항복 확인창이 열려있는 상태로 매치가 끝날 수 있음(항복 자체가 그 경로임) -
+            // 결과 화면 아래에 다른 팝업이 남아있지 않도록 먼저 전부 닫음.
+            PopupManager.Instance?.CloseAll();
+
             _resultLabel.text = won ? "승리!" : "패배...";
             _document.rootVisualElement.style.display = DisplayStyle.Flex;
         }

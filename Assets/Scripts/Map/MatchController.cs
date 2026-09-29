@@ -4,6 +4,7 @@ using UnityEngine;
 using Unity.Netcode;
 using TowerDefense.Data;
 using TowerDefense.Network;
+using TowerDefense.Monsters;
 
 namespace TowerDefense.Map
 {
@@ -19,6 +20,17 @@ namespace TowerDefense.Map
     /// 4) 타워 배치 요청을 서버에서 검증(SP/칸/보드 소유권) 후 NetworkObject로 스폰 - 클라이언트가
     ///    직접 스폰하면 위조 배치/무한 SP 사용 같은 치팅이 가능해지므로 반드시 서버를 거쳐야 함
     /// 5) 기지 파괴(패배) 감지 -> 양쪽에 결과 통보 -> RankManager/MatchmakingService 후처리 호출
+    /// 6) 항복 요청 처리 - 기지 파괴와 동일한 패배 처리 경로(HandleBaseDestroyed)를 그대로 재사용함
+    ///    (인게임 UI의 일시정지 메뉴 -> 항복 확인창에서 호출, Assets/UI/Popups/PauseMenu 참고)
+    /// 7) 웨이브별 보스 랜덤 선택(서버 권위, 양쪽 동일 보스) - MonsterSpawner.RunBossPhase가
+    ///    80초 타이머 종료 시점마다 RequestBossForWave(wave)를 호출함. 이 랜덤은 반드시 서버에서
+    ///    "웨이브당 딱 한 번만" 굴려야 함(안 그러면 BoardA/BoardB가 각자 다른 보스를 뽑아버림) -
+    ///    그래서 굴린 결과를 WaveDataSO 에셋 레퍼런스 기준으로 캐싱해서, 같은 웨이브에 대해 먼저
+    ///    요청한 쪽이 굴리고 나중에 요청한 쪽(상대 보드)은 캐싱된 값을 그대로 받아감.
+    /// 8) 계절/날씨 시스템(천명.pptx 슬라이드 12/13) - 계절은 매치 시작 시 서버가 1회만 굴려
+    ///    SelectedSeason에 저장하고 한 판 내내 유지함. 날씨는 웨이브마다 RequestWeatherForWave가
+    ///    보스 선택과 동일한 WaveDataSO 레퍼런스 캐싱 방식으로 "양쪽 동일 날씨"를 보장하고,
+    ///    CurrentWeather NetworkVariable로 브로드캐스트함(TowerUnit/InGameHUDController가 구독).
     /// </summary>
     public class MatchController : NetworkBehaviour
     {
@@ -42,10 +54,29 @@ namespace TowerDefense.Map
         public NetworkVariable<float> BoardSpA = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         public NetworkVariable<float> BoardSpB = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        // 계절/날씨 시스템(천명.pptx 슬라이드 12/13) - 계절은 매치 시작 시 1회, 날씨는 웨이브마다
+        // 서버가 굴려서 여기 NetworkVariable로 브로드캐스트함(양쪽 클라이언트/HUD가 그대로 구독).
+        // int로 저장하는 이유는 NetworkVariable<enum>이 Netcode 2.13.2 기준 직렬화에 커스텀 struct
+        // wrapper가 필요해서 굳이 복잡하게 안 만들고 SelectedMapIndex(int)와 같은 방식을 그대로 따름.
+        public NetworkVariable<int> SelectedSeason = new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        public NetworkVariable<int> CurrentWeather = new((int)WeatherType.Clear, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
         private readonly Dictionary<int, PlayerBoard> _boards = new();
         private Dictionary<string, CharacterDataSO> _characterLookup;
         private bool _matchStarted;
         private bool _matchEnded;
+
+        // 웨이브당 보스 랜덤 선택 캐시 - WaveDataSO 에셋 레퍼런스를 키로 씀(BoardA/BoardB 스포너가
+        // 인스펙터에서 같은 WaveDataSO 에셋 리스트를 공유하는 구성을 전제함 - RequestBossForWave 참고).
+        private readonly Dictionary<WaveDataSO, MonsterDataSO> _bossPickForWave = new();
+
+        // 웨이브당 날씨 랜덤 선택 캐시 - 보스 선택과 완전히 같은 이유·같은 구조로 WaveDataSO 에셋
+        // 레퍼런스를 키로 씀(RequestWeatherForWave 참고).
+        private readonly Dictionary<WaveDataSO, WeatherType> _weatherPickForWave = new();
+
+        /// <summary>낙엽 날씨가 뜬 순간(웨이브당 1회) 발생 - 순수 시각 연출용(시야 가림, 지속시간 초 단위).
+        /// InGameHUDController가 구독해서 화면 오버레이를 띄움(게임플레이 로직에는 영향 없음).</summary>
+        public event Action<float> OnVisionBlockStarted;
 
         /// <summary>매치가 끝났을 때(승패 결정) 발생 - bool은 "이 클라이언트 로컬 관점에서 내가 이겼는지".
         /// UI(결과 팝업)가 이걸 구독해서 화면을 띄움 - Map 레이어가 UI를 직접 참조하지 않도록
@@ -74,6 +105,10 @@ namespace TowerDefense.Map
             // UnityEngine.Random이 둘 다 시야에 들어와서 모호해짐 - 명시적으로 UnityEngine.Random을 지정함.
             SelectedMapIndex.Value = UnityEngine.Random.Range(0, mapCount);
 
+            // 계절도 맵과 동일하게 매치 시작 시 서버가 1회만 굴리고 한 판 내내 유지함(슬라이드 12:
+            // "계절 1개가 랜덤으로 정해지고, 한 판 내내 유지됩니다").
+            SelectedSeason.Value = UnityEngine.Random.Range(0, System.Enum.GetValues(typeof(SeasonType)).Length);
+
             // 씬 로드 전에 이미 두 플레이어가 다 붙어있는 경우(매치메이킹 후 씬 전환이라 보통 이 경우임)를
             // 대비해서 기존 접속자를 먼저 확인하고, 그 이후 접속/이탈은 콜백으로 처리함.
             foreach (var clientId in NetworkManager.Singleton.ConnectedClientsIds)
@@ -93,7 +128,14 @@ namespace TowerDefense.Map
 
         private void AssignBoardOwner(ulong clientId)
         {
-            if (BoardOwnerA.Value == clientId || BoardOwnerB.Value == clientId) return; // 이미 배정됨(재접속 등)
+            // [임시 진단 로그 - 2026-09-30] 매치 시작 실패 원인 추적용. 문제 해결되면 제거할 것.
+            Debug.Log($"[MatchController][진단] AssignBoardOwner 호출됨. clientId={clientId}, 현재 BoardOwnerA={BoardOwnerA.Value}, BoardOwnerB={BoardOwnerB.Value}");
+
+            if (BoardOwnerA.Value == clientId || BoardOwnerB.Value == clientId)
+            {
+                Debug.Log($"[MatchController][진단] clientId={clientId}는 이미 배정돼 있어서 무시함(재접속 등).");
+                return; // 이미 배정됨(재접속 등)
+            }
 
             if (BoardOwnerA.Value == Unassigned) BoardOwnerA.Value = clientId;
             else if (BoardOwnerB.Value == Unassigned) BoardOwnerB.Value = clientId;
@@ -103,6 +145,7 @@ namespace TowerDefense.Map
                 return;
             }
 
+            Debug.Log($"[MatchController][진단] 배정 완료. BoardOwnerA={BoardOwnerA.Value}, BoardOwnerB={BoardOwnerB.Value} → TryStartMatch 호출.");
             TryStartMatch();
         }
 
@@ -110,10 +153,69 @@ namespace TowerDefense.Map
         public void RegisterBoard(PlayerBoard board)
         {
             _boards[board.BoardIndex] = board;
+
+            // [임시 진단 로그 - 2026-09-30] 매치 시작 실패 원인 추적용. 문제 해결되면 제거할 것.
+            Debug.Log($"[MatchController][진단] RegisterBoard 호출됨. boardIndex={board.BoardIndex}, IsServer={IsServer}, 현재 등록된 보드 개수={_boards.Count}(키: {string.Join(",", _boards.Keys)})");
+
             if (IsServer) TryStartMatch();
         }
 
         public ulong GetOwnerClientId(int boardIndex) => boardIndex == 0 ? BoardOwnerA.Value : BoardOwnerB.Value;
+
+        /// <summary>
+        /// MonsterSpawner.RunBossPhase(80초 타이머 종료 시점)가 호출함 - 이 웨이브의 보스를
+        /// bossPool 중 하나로 서버 권위 랜덤 선택함. 같은 WaveDataSO에 대해 두 번째로 호출되면
+        /// (상대 보드 스포너가 뒤이어 요청) 처음 굴린 값을 그대로 반환해서 "양쪽 동일 보스"를
+        /// 보장함 - 클라이언트에서 호출되거나(IsServer 아님) bossPool이 비어있으면 null 반환.
+        /// </summary>
+        public MonsterDataSO RequestBossForWave(WaveDataSO wave)
+        {
+            if (!IsServer) return null;
+            if (wave == null || wave.bossPool == null || wave.bossPool.Count == 0) return null;
+
+            if (_bossPickForWave.TryGetValue(wave, out var cached)) return cached;
+
+            var pick = wave.bossPool[UnityEngine.Random.Range(0, wave.bossPool.Count)];
+            _bossPickForWave[wave] = pick;
+            return pick;
+        }
+
+        /// <summary>
+        /// MonsterSpawner.RunWaves()가 웨이브를 시작할 때마다 호출함 - 이 웨이브의 날씨를
+        /// SelectedSeason 기준 후보(맑음 + 계절 전용 2종 + 공용 2종) 중 서버 권위 랜덤으로 선택함.
+        /// 보스 선택(RequestBossForWave)과 완전히 같은 이유·같은 구조로 WaveDataSO 에셋 레퍼런스
+        /// 기준 캐싱을 써서 "양쪽 동일 날씨"를 보장함. 클라이언트에서 호출되면(IsServer 아님)
+        /// WeatherType.Clear를 반환함(안전한 기본값 - 효과 없음).
+        /// </summary>
+        public WeatherType RequestWeatherForWave(WaveDataSO wave)
+        {
+            if (!IsServer) return WeatherType.Clear;
+            if (wave == null) return WeatherType.Clear;
+
+            if (_weatherPickForWave.TryGetValue(wave, out var cached)) return cached;
+
+            var season = (SeasonType)SelectedSeason.Value;
+            var candidates = WeatherEffectTable.GetCandidates(season);
+            var pick = candidates[UnityEngine.Random.Range(0, candidates.Length)];
+
+            _weatherPickForWave[wave] = pick;
+            CurrentWeather.Value = (int)pick; // HUD/TowerUnit이 구독하는 전역값 갱신
+
+            if (WeatherEffectTable.HasVisionBlockEffect(pick, out float duration))
+            {
+                VisionBlockStartedRpc(duration);
+            }
+
+            return pick;
+        }
+
+        /// <summary>낙엽 날씨 시작을 양쪽 클라이언트에 브로드캐스트함(순수 시각 연출 트리거 - 게임플레이
+        /// 로직과 무관, OnVisionBlockStarted 구독자(HUD)가 화면 오버레이를 띄움).</summary>
+        [Rpc(SendTo.ClientsAndHost)]
+        private void VisionBlockStartedRpc(float durationSeconds)
+        {
+            OnVisionBlockStarted?.Invoke(durationSeconds);
+        }
 
         /// <summary>로컬 플레이어(나) 소유의 보드를 찾음 - TowerPlacementController가 "내 보드에만 배치" 판단에 씀. 아직 배정 전이면 null.</summary>
         public PlayerBoard GetLocalBoard()
@@ -127,10 +229,29 @@ namespace TowerDefense.Map
 
         private void TryStartMatch()
         {
-            if (!IsServer || _matchStarted) return;
-            if (BoardOwnerA.Value == Unassigned || BoardOwnerB.Value == Unassigned) return;
-            if (!_boards.ContainsKey(0) || !_boards.ContainsKey(1)) return;
+            // [임시 진단 로그 - 2026-09-30] 매치 시작 실패 원인 추적용. 문제 해결되면 제거할 것.
+            if (!IsServer)
+            {
+                Debug.Log("[MatchController][진단] TryStartMatch: 서버가 아니라서 리턴함.");
+                return;
+            }
+            if (_matchStarted)
+            {
+                Debug.Log("[MatchController][진단] TryStartMatch: 이미 _matchStarted=true라서 리턴함.");
+                return;
+            }
+            if (BoardOwnerA.Value == Unassigned || BoardOwnerB.Value == Unassigned)
+            {
+                Debug.Log($"[MatchController][진단] TryStartMatch: BoardOwner 미배정이라 리턴함. BoardOwnerA={BoardOwnerA.Value}, BoardOwnerB={BoardOwnerB.Value} (Unassigned={Unassigned})");
+                return;
+            }
+            if (!_boards.ContainsKey(0) || !_boards.ContainsKey(1))
+            {
+                Debug.Log($"[MatchController][진단] TryStartMatch: 보드 등록 미완료라 리턴함. 등록된 키: {string.Join(",", _boards.Keys)}");
+                return;
+            }
 
+            Debug.Log("[MatchController][진단] TryStartMatch: 모든 조건 통과 - 매치 시작 진행.");
             _matchStarted = true;
 
             var boardA = _boards[0];
@@ -147,6 +268,13 @@ namespace TowerDefense.Map
             boardB.Resources.OnSPChanged += sp => BoardSpB.Value = sp;
             BoardSpA.Value = boardA.Resources.CurrentSP;
             BoardSpB.Value = boardB.Resources.CurrentSP;
+
+            // 몬스터 전송("넘어온 몬스터") - 한쪽에서 죽은 몬스터가 상대 보드로 넘어가려면 두
+            // 스포너가 서로를 알아야 함. 인스펙터에서 미리 연결해두는 대신 여기서(양쪽 보드가
+            // 모두 확정된 시점) 서버가 직접 배선함 - PlayerBoard/MonsterSpawner 에셋을 매치마다
+            // 미리 짝지어둘 필요가 없어져서 맵이 바뀌어도(SelectedMapIndex) 그대로 동작함.
+            boardA.Spawner.SetOpponentSpawner(boardB.Spawner);
+            boardB.Spawner.SetOpponentSpawner(boardA.Spawner);
 
             // 요청사항: "웨이브는 양쪽에서 동시에 옴" - 두 보드의 웨이브를 바로 이어서 시작함.
             boardA.Spawner.StartWaves();
@@ -227,7 +355,9 @@ namespace TowerDefense.Map
                 return; // 칸이 막혀있음 - 클라이언트가 이미 로컬에서 IsBuildable을 먼저 확인하고 보내므로 정상 흐름에선 드묾
             }
 
-            if (!board.Resources.TrySpendSP(characterData.summonCost))
+            // [기획 확정] 캐릭터별 개별 SP 비용(characterData.summonCost)은 더 이상 안 씀 - 소환 비용은
+            // 항상 MatchResourceManager.SummonSpCost(고정 10)로 통일됨(그 클래스 doc 참고).
+            if (!board.Resources.TrySpendSP(MatchResourceManager.SummonSpCost))
             {
                 return; // SP 부족
             }
@@ -238,13 +368,65 @@ namespace TowerDefense.Map
             {
                 Debug.LogError("[MatchController] genericTowerVisualPrefab에 NetworkObject 컴포넌트가 없음.");
                 Destroy(instance.gameObject);
-                board.Resources.AddSP(characterData.summonCost); // 이미 낸 SP 환불
+                board.Resources.AddSP(MatchResourceManager.SummonSpCost); // 이미 낸 SP 환불
                 return;
             }
 
+            // [버그 수정 - 2026-09-29] 배치된 타워 비주얼이 타일 한 칸보다 크게 보이는 문제 - 스폰 직후
+            // Spawn() 전에 스케일을 그리드 칸 크기에 맞춤. Spawn() 전에 바꾸는 이유: NetworkObject의
+            // SynchronizeTransform이 "스폰 시점의 초기 transform(스케일 포함)"을 스폰 페이로드에 그대로
+            // 담아서 클라이언트에 보내주므로, 여기서 서버가 미리 스케일을 맞춰두면 별도 NetworkTransform
+            // 없이도 양쪽 클라이언트에 동일하게 반영됨. 칸 크기(PlacementGrid.CellSize) 대비 스프라이트
+            // 원본 크기의 비율로 계산해서 나중에 실제 아트(다른 PPU/픽셀 크기)로 교체돼도 코드 수정 없이
+            // 그대로 맞게 동작함(하드코딩된 배율 숫자를 안 씀).
+            FitVisualToCell(instance.transform, board.Grid.CellSize);
+
             networkObject.Spawn();
             board.Grid.MarkOccupied(cell, instance.gameObject);
-            instance.Init(characterData);
+            // [버그 수정 - 2026-09-29] TowerUnit이 소속 보드(board.Spawner)를 알아야 상대 보드
+            // 몬스터를 잘못 타겟팅하지 않음 - TowerUnit.cs의 _ownBoardSpawner 필드 주석 참고.
+            instance.Init(characterData, board.Spawner);
+        }
+
+        // 스프라이트의 "스케일 1일 때 월드 크기"(SpriteRenderer.sprite.bounds.size) 대비 그리드 한 칸
+        // 크기의 비율로 균일 스케일을 구함. 가로/세로 중 더 작은 쪽 기준으로 잡아서(Mathf.Min), 정사각형이
+        // 아닌 스프라이트가 와도 칸 밖으로 삐져나오지 않고 항상 칸 안에 딱 맞게 들어감.
+        private static void FitVisualToCell(Transform towerTransform, Vector3 cellSize)
+        {
+            var spriteRenderer = towerTransform.GetComponentInChildren<SpriteRenderer>();
+            if (spriteRenderer == null || spriteRenderer.sprite == null) return;
+
+            Vector2 spriteWorldSize = spriteRenderer.sprite.bounds.size;
+            if (spriteWorldSize.x <= 0f || spriteWorldSize.y <= 0f) return;
+
+            float targetCellSize = Mathf.Min(cellSize.x, cellSize.y);
+            float scale = Mathf.Min(targetCellSize / spriteWorldSize.x, targetCellSize / spriteWorldSize.y);
+            towerTransform.localScale = new Vector3(scale, scale, 1f);
+        }
+
+        /// <summary>
+        /// 클라이언트가 항복을 요청할 때 호출(PauseMenuController - 항복 확인창의 "확인" 콜백 참고).
+        /// 자기 보드가 파괴된 것과 동일한 패배 처리 경로(HandleBaseDestroyed)를 그대로 태우므로,
+        /// 랭크 반영/매칭 세션 정리/결과 화면 표시가 기지 파괴 때와 완전히 똑같이 동작함.
+        /// </summary>
+        [Rpc(SendTo.Server)]
+        public void RequestSurrenderRpc(RpcParams rpcParams = default)
+        {
+            ulong senderId = rpcParams.Receive.SenderClientId;
+
+            int surrenderingBoardIndex = -1;
+            if (BoardOwnerA.Value == senderId) surrenderingBoardIndex = 0;
+            else if (BoardOwnerB.Value == senderId) surrenderingBoardIndex = 1;
+
+            if (surrenderingBoardIndex < 0)
+            {
+                // 보드가 아직 배정 안 됐거나(매칭 직후) 조작된 요청 - 정상 흐름에선 거의 안 일어남.
+                Debug.LogWarning($"[MatchController] clientId={senderId}의 보드를 찾을 수 없어 항복 요청을 무시함.");
+                return;
+            }
+
+            Debug.Log($"[MatchController] clientId={senderId}(보드 {surrenderingBoardIndex}) 항복 요청 - 패배 처리함.");
+            HandleBaseDestroyed(surrenderingBoardIndex);
         }
     }
 }
