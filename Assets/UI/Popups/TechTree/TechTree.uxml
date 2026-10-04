@@ -13,7 +13,7 @@
 
             <ui:VisualElement name="techtree-canvas" class="techtree-canvas" />
 
-            <ui:Label text="선택한 노드를 눌러 골드로 해금하세요 (빈 공간을 드래그하면 화면을 옮길 수 있습니다)" class="techtree-hint" />
+            <ui:Label text="노드를 눌러 상세 정보를 확인하고 해금·레벨업하세요 (빈 공간 드래그: 이동 · 마우스 휠: 확대/축소 · 빈 공간 더블클릭: 전체 보기)" class="techtree-hint" />
 
             <ui:Button name="close-button" text="닫기" class="popup-close-button" />
         </ui:VisualElement>

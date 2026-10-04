@@ -16,13 +16,15 @@ MonoBehaviour:
   displayName: "\uBC29\uD328 \uBCD1\uC0AC"
   maxHp: 10
   hpMultiplier: 5
-  moveSpeedMultiplier: 0.6
-  moveSpeed: 2
+  moveSpeedMultiplier: 1
+  moveSpeed: 0.3
   spawnWeight: 10
   isBoss: 0
   goldReward: 5
+  killSp: 45
+  killSpPerWave: 18
   damageToBase: 1
-  prefab: {fileID: 5542756559366482663, guid: 247c58b82b75c834db37931311e33028, type: 3}
+  prefab: {fileID: 5542756559366482663, guid: 83d5c334b0ee9a9439c10a19f2f29dd8, type: 3}
   iconSprite: {fileID: 0}
   abilityName: 
   abilityDescription: 

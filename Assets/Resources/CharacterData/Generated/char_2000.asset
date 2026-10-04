@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_2000
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 2000
+  characterId: char_2000
+  displayName: "\uC724\uC7AC\uD6C8"
+  faction: "\uBE44\uC120\uCCAD"
+  description: 
+  weapon: "\uC9C0\uD321\uC774(\uB098\uBB34)"
+  attackType: 1
+  isSupport: 1
+  mergeType: 0
+  targetPriority: 0
+  baseDamage: 81
+  attackInterval: 1.5
+  range: 5
+  starAttackPower: 30
+  starAttackInterval: 0
+  gaugePerHit: 0
+  killType: 0
+  gaugePerKill: 10
+  ultimateGauge: 600
+  skill:
+    name: "\uC628\uC804\uD55C \uB9C8\uC74C"
+    description: "(40\uCD08\uB9C8\uB2E4) 10\uCD08\uAC04 \uC0C1\uB300 \uCE90\uB9AD\uD130
+      \uC804\uCCB4\uC758 \uACF5\uACA9\uC18D\uB3C4\uB97C n% \uAC10\uC18C\uC2DC\uD0B5\uB2C8\uB2E4.
+      \uBCF8\uC778\uC740 \uACF5\uACA9\uD558\uC9C0 \uBABB\uD558\uB294 \uBC84\uD504\uD615
+      \uCE90\uB9AD\uD130\uC785\uB2C8\uB2E4."
+    parameters:
+    - key: enemyAttackSpeedDownPercent
+      meaning: "40\uCD08\uB9C8\uB2E4 10\uCD08\uAC04 \uC0C1\uB300 \uC804\uCCB4 \uACF5\uC18D
+        n% \uAC10\uC18C"
+      values:
+      - 20
+      - 21
+      - 23
+      - 26
+      - 30
+  ultimate:
+    name: "\uC138\uACC4\uC218\uC758 \uCD95\uBCF5"
+    description: "(6\uCD08 \uB3D9\uC548) \uC0AC\uAC70\uB9AC \uB0B4 \uCE90\uB9AD\uD130\uC5D0\uAC8C
+      \uACF5\uACA9\uC18D\uB3C4 30%\uC640, \uC724\uC7AC\uD6C8 \uACF5\uACA9\uB825\uC758
+      n%\uB9CC\uD07C \uCD94\uAC00 \uACF5\uACA9\uB825\uC744 \uBD80\uC5EC\uD569\uB2C8\uB2E4."
+    parameters:
+    - key: attackSharePercent
+      meaning: "6\uCD08 \uB3D9\uC548 \uC0AC\uAC70\uB9AC \uB0B4 \uC544\uAD70\uC5D0
+        \uC724\uC7AC\uD6C8 \uACF5\uACA9\uB825\uC758 n% \uBD80\uC5EC (+ \uACF5\uC18D
+        30%)"
+      values:
+      - 10
+      - 13
+      - 16
+      - 22
+      - 30
+  isStarter: 1
+  unlockCost: 0
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

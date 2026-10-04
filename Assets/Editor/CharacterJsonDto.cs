@@ -3,39 +3,45 @@ using TowerDefense.Data;
 
 namespace TowerDefense.Data.Import
 {
-    // JsonUtility는 최상위가 배열인 JSON을 못 읽기 때문에( "[...]" 바로 파싱 불가 ),
-    // 반드시 { "characters": [ ... ] } 형태로 한 번 감싸야 함. 이 파일 하나가 그 감싼 형태.
+    // JsonUtility는 최상위가 배열인 JSON을 못 읽으므로 { "characters": [ ... ] } 형태로 감싼 파일을 받음.
+    // 필드 이름은 Characters.json(엑셀 '캐릭터 스탯' + '스킬 밸런싱'에서 내보낸 파일)과 1:1로 같아야 함 -
+    // JsonUtility는 이름이 다른 필드를 조용히 무시하므로 이름 오타가 나면 값이 0/빈 값으로 들어옴.
+    // enum은 JsonUtility가 문자열을 못 읽어서(정수로 취급) 전부 string으로 받고 임포터에서 파싱함.
     [System.Serializable]
     public class CharacterJsonFile
     {
+        public string version;
+        public string source;
+        public int startSkillLevel;
+        public int maxSkillLevel;
+        public int maxStar;
+        public SupportUltimateChargeConfig supportUltimateCharge;
         public List<CharacterJsonEntry> characters;
     }
 
-    // CharacterDataSO와 필드를 1:1로 맞춘 DTO.
-    // unlockCurrency는 CurrencyType enum이 아니라 그냥 string으로 받음 —
-    // JsonUtility가 enum을 정수로 취급해서 기획/프로그래머가 JSON에 "Gold"/"Gem" 대신
-    // 0/1을 써야 하는 실수 유발 지점이 되기 때문. 문자열로 받은 다음
-    // CharacterJsonImporter에서 수동으로 enum에 매핑함.
     [System.Serializable]
     public class CharacterJsonEntry
     {
-        public string characterId;
-        public string displayName;
-        public string description;
+        public int code;
+        public string name;
+        public string weapon;
+        public string attackType;      // "Melee" / "Ranged"
+        public bool isSupport;
 
-        public string characterTag;
-
-        public float baseDamage;
+        public float attackPower;
+        public float attackInterval;
         public float range;
-        public float attackSpeed;
-        public int summonCost;
+        public string targetPriority;  // "Front" / "HighestHp" / "LowestHp"
+        public string mergeType;       // "Power" / "Speed"
+        public float starAttackPower;
+        public float starAttackInterval;
 
-        public int unlockCost;
-        public string unlockCurrency; // "Gold" 또는 "Gem"
+        public int gaugePerHit;
+        public string killType;        // "Normal" / "Area" / "Sniper"
+        public int gaugePerKill;
+        public int ultimateGauge;
 
-        // 스킬은 기존 TowerDefense.Data.SkillData를 그대로 재사용.
-        // SkillData 자체가 이미 [Serializable]인 순수 데이터 클래스라서
-        // JSON 쪽 스킬 필드명도 skillId/skillName/description/cooldown/value/skillType 그대로 맞추면 됨.
-        public List<SkillData> skills;
+        public SkillDefinition skill;
+        public SkillDefinition ultimate;
     }
 }

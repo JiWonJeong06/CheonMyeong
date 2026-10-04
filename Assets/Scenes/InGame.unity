@@ -887,6 +887,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Map.BaseHealth
   spawner: {fileID: 1752821789}
   maxHp: 3
+  normalLeaksPerHeart: 3
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -993,7 +994,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 7.7625
+  orthographic size: 7.7
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1296,6 +1297,16 @@ MonoBehaviour:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 0
+  BoardSummonCostA:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 100
+  BoardSummonCostB:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 100
   SelectedSeason:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
@@ -2440,7 +2451,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24fe83b8771b9834698565f4d4ca9b64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Map.PlacementGrid
-  buildableTilemap: {fileID: 1348486333}
+  buildableTilemap: {fileID: 1570171418}
   pathTilemap: {fileID: 1838057231}
 --- !u!483693784 &1348486332
 TilemapRenderer:
@@ -5611,9 +5622,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf7dd7441c1cd1d4dae75f5172dfe922, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Map.MatchResourceManager
-  maxSP: 100
-  spPerSecond: 5
-  startingSP: 50
 --- !u!1 &1376787048
 GameObject:
   m_ObjectHideFlags: 0
@@ -6152,7 +6160,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24fe83b8771b9834698565f4d4ca9b64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Map.PlacementGrid
-  buildableTilemap: {fileID: 1570171418}
+  buildableTilemap: {fileID: 1348486333}
   pathTilemap: {fileID: 0}
 --- !u!483693784 &1570171417
 TilemapRenderer:
@@ -9323,9 +9331,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf7dd7441c1cd1d4dae75f5172dfe922, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Map.MatchResourceManager
-  maxSP: 100
-  spPerSecond: 5
-  startingSP: 50
 --- !u!1 &1572242511
 GameObject:
   m_ObjectHideFlags: 0
@@ -9496,6 +9501,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Map.BaseHealth
   spawner: {fileID: 784507227}
   maxHp: 3
+  normalLeaksPerHeart: 3
 --- !u!1 &1723518246
 GameObject:
   m_ObjectHideFlags: 0

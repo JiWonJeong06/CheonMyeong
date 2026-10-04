@@ -23,6 +23,16 @@ namespace TowerDefense.Data
         private const string JsonResourcePath = "Data/TechTreeData"; // 확장자 제외, Resources 기준 상대경로
         private const string UnlockedKey = "TechTree_UnlockedIds";
         private const string CharacterNodeIdPrefix = "char_"; // 캐릭터 해금 노드 id 접두어 (JSON 노드 id와 충돌 방지)
+        public const string HubNodeIdPrefix = "hub_";           // 조직 허브 노드 id 접두어
+
+        /// <summary>허브(조직) 표시 순서 - 엑셀 '조직' 시트 순서. 노드 트리 라인 이름과 같음(NodeTreeLines).</summary>
+        public static readonly string[] HubLines =
+        {
+            NodeTreeLines.Cheonmyeonghoe, NodeTreeLines.Heugyeonhoe, NodeTreeLines.Biseoncheong,
+            NodeTreeLines.Jihamun, NodeTreeLines.Pungnyudan, NodeTreeLines.Hwarranghoe
+        };
+
+        public static string HubNodeId(string line) => HubNodeIdPrefix + line;
 
         private readonly Dictionary<string, TechNodeData> _nodesById = new();
         private readonly HashSet<string> _unlockedIds = new();
@@ -48,6 +58,7 @@ namespace TowerDefense.Data
         public bool IsUnlocked(string nodeId)
         {
             if (!_nodesById.TryGetValue(nodeId, out var node)) return false;
+            if (node.isHub) return true; // 허브는 폴더 같은 묶음이라 항상 열려 있음 - 하위 노드의 선행 조건이 항상 충족됨
 
             if (!string.IsNullOrEmpty(node.linkedCharacterId))
             {
@@ -56,6 +67,35 @@ namespace TowerDefense.Data
             }
 
             return _unlockedIds.Contains(nodeId);
+        }
+
+        /// <summary>
+        /// 해금된 노드들의 효과 합(퍼센트, 5 = +5%). 소속 효과(Line*)는 line이 같은 노드만, 전체 효과
+        /// (GlobalAttackPercent)는 line 무관. unlockedOverride가 null이면 이 기기의 해금 상태를, 아니면 그
+        /// 집합(예: 서버가 클라이언트에게서 받은 PlayerLoadout.unlockedNodeIds)을 기준으로 계산함.
+        /// 딕셔너리 값을 foreach로 도는 구조체 열거자라 할당이 없음.
+        /// </summary>
+        public float GetBonusPercent(NodeEffectType type, string line, HashSet<string> unlockedOverride = null)
+        {
+            if (type == NodeEffectType.None) return 0f;
+
+            float sum = 0f;
+            foreach (var node in _nodesById.Values)
+            {
+                if (node.ParsedEffectType != type) continue;
+                if (type != NodeEffectType.GlobalAttackPercent &&
+                    !string.Equals(node.effectLine, line, StringComparison.Ordinal)) continue;
+
+                bool unlocked = unlockedOverride != null ? unlockedOverride.Contains(node.nodeId) : IsUnlocked(node.nodeId);
+                if (unlocked) sum += node.effectValue;
+            }
+            return sum;
+        }
+
+        /// <summary>해금된 "스탯 노드" id를 destination에 복사(캐릭터 해금 노드는 CharacterUnlockManager 소관이라 제외).</summary>
+        public void CopyUnlockedStatNodeIdsTo(HashSet<string> destination)
+        {
+            foreach (string id in _unlockedIds) destination.Add(id);
         }
 
         public bool ArePrerequisitesMet(string nodeId)
@@ -68,6 +108,7 @@ namespace TowerDefense.Data
         public bool TryUnlock(string nodeId)
         {
             if (!_nodesById.TryGetValue(nodeId, out var node)) return false;
+            if (node.isHub) return false; // 허브는 해금 대상이 아님
             if (IsUnlocked(nodeId)) return false;
             if (!ArePrerequisitesMet(nodeId)) return false;
 
@@ -113,10 +154,13 @@ namespace TowerDefense.Data
         {
             _nodesById.Clear();
 
+            AddHubNodes(); // JSON을 못 읽어도 조직 허브와 캐릭터 노드는 항상 만들어 둠(아래 return 이전에 호출)
+
             var jsonAsset = Resources.Load<TextAsset>(JsonResourcePath);
             if (jsonAsset == null)
             {
                 Debug.LogWarning($"[TechTreeManager] {JsonResourcePath}.json을 Resources에서 못 찾음.");
+                AddCharacterUnlockNodes();
                 return;
             }
 
@@ -133,9 +177,25 @@ namespace TowerDefense.Data
 
             if (parsed?.nodes != null)
             {
+                int rootIndex = 0;
                 foreach (var node in parsed.nodes)
                 {
                     if (string.IsNullOrWhiteSpace(node.nodeId)) continue;
+
+                    // 선행 조건 없는 스탯 노드(뿌리)는 어느 조직 허브에 붙일지 정해야 함 - JSON의 hubLine을 우선하고,
+                    // 비어 있거나 없는 조직 이름이면 6개 허브에 돌아가며 배정함. 그 뒤 허브를 선행 조건으로 넣음
+                    // (허브는 항상 열려 있어서 해금 흐름은 그대로).
+                    if (node.prerequisiteNodeIds == null || node.prerequisiteNodeIds.Count == 0)
+                    {
+                        string line = node.hubLine;
+                        if (string.IsNullOrEmpty(line) || Array.IndexOf(HubLines, line) < 0)
+                        {
+                            line = HubLines[rootIndex % HubLines.Length];
+                        }
+                        rootIndex++;
+                        node.hubLine = line;
+                        node.prerequisiteNodeIds = new List<string> { HubNodeId(line) };
+                    }
                     _nodesById[node.nodeId] = node;
                 }
             }
@@ -143,10 +203,30 @@ namespace TowerDefense.Data
             AddCharacterUnlockNodes();
         }
 
+        // 조직 허브 6개(천명회·흑연회·비선청·지하문·풍류단·화랑회) - 해금하는 노드가 아니라 캐릭터/스탯 노드를
+        // 묶어주는 폴더 같은 노드. 코어에 연결되고 항상 열려 있음.
+        private void AddHubNodes()
+        {
+            foreach (string line in HubLines)
+            {
+                string id = HubNodeId(line);
+                _nodesById[id] = new TechNodeData
+                {
+                    nodeId = id,
+                    displayName = line,
+                    description = "조직",
+                    cost = 0,
+                    prerequisiteNodeIds = null,
+                    hubLine = line,
+                    isHub = true
+                };
+            }
+        }
+
         // CharacterDatabase에 있는 캐릭터 수만큼 "캐릭터 해금 노드"를 자동 생성해서 같은 트리에 섞어 넣음.
         // JSON에 캐릭터를 직접 쓰지 않는 이유: 기획팀이 캐릭터를 추가/삭제할 때마다 TechTreeData.json도
         // 같이 손봐야 하는 이중 관리 부담을 없애기 위함 - 캐릭터 쪽 데이터(CharacterDataSO)만 늘어나면
-        // 테크트리에도 자동으로 반영됨. 선행조건 없이 독립 노드(depth 0)로 취급함.
+        // 테크트리에도 자동으로 반영됨. 자기 조직 허브(depth 0)에 연결된 노드(depth 1)로 취급함.
         private void AddCharacterUnlockNodes()
         {
             foreach (var characterData in CharacterDatabase.GetAll())
@@ -158,9 +238,17 @@ namespace TowerDefense.Data
                     displayName = characterData.displayName,
                     description = "캐릭터 해금",
                     cost = characterData.unlockCost,
-                    prerequisiteNodeIds = null,
                     linkedCharacterId = characterData.characterId
                 };
+                // 캐릭터는 자기 조직 허브에 연결됨(무소속 3명은 노드 트리 라인 기준: 강민준→천명회, 임서연→풍류단, 쇼타→지하문).
+                // 알 수 없는 코드면 허브 없이 코어에 직접 연결됨(prerequisiteNodeIds 비움).
+                string line = NodeTreeLines.GetLine(characterData.code);
+                var node = _nodesById[nodeId];
+                if (!string.IsNullOrEmpty(line))
+                {
+                    node.hubLine = line;
+                    node.prerequisiteNodeIds = new List<string> { HubNodeId(line) };
+                }
             }
         }
 
@@ -190,6 +278,7 @@ namespace TowerDefense.Data
         public void DebugResetAllPurchases()
         {
             CharacterUnlockManager.Instance?.DebugResetUnlocks();
+            CharacterLevelManager.Instance?.DebugResetLevels();
             EconomyManager.Instance?.DebugResetCurrency();
             DebugResetUnlocks();
         }

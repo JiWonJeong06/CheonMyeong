@@ -8,6 +8,9 @@ using TowerDefense.Monsters;
 
 namespace TowerDefense.Map
 {
+    /// <summary>매치 결과(로컬 클라이언트 관점).</summary>
+    public enum MatchOutcome { Win, Lose, Draw }
+
     /// <summary>
     /// 1:1 대전 한 판 전체를 서버 권위로 조율하는 컨트롤러. 씬에 딱 하나만 존재해야 하고(맵 5종
     /// 루트 바깥에, MapSelector와 같은 레벨에 둘 것 - 어느 맵이 선택되든 항상 존재해야 하니까),
@@ -46,6 +49,9 @@ namespace TowerDefense.Map
         // (clientId 0은 보통 서버/호스트 자신이라 0을 미배정으로 쓰면 헷갈림).
         private const ulong Unassigned = ulong.MaxValue;
 
+        // MatchEndedRpc의 loserBoardIndex에 이 값이 오면 무승부(진 쪽 없음).
+        private const int DrawBoardIndex = -1;
+
         public NetworkVariable<int> SelectedMapIndex = new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         public NetworkVariable<ulong> BoardOwnerA = new(Unassigned, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         public NetworkVariable<ulong> BoardOwnerB = new(Unassigned, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -53,6 +59,9 @@ namespace TowerDefense.Map
         public NetworkVariable<int> BoardHpB = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         public NetworkVariable<float> BoardSpA = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         public NetworkVariable<float> BoardSpB = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        // 다음 소환 가격(100 + 10 × 소환 횟수) - 클라이언트 UI(카드 흐림/SP 소모 표시)와 사전 체크용.
+        public NetworkVariable<int> BoardSummonCostA = new(MatchResourceManager.SummonBaseCost, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        public NetworkVariable<int> BoardSummonCostB = new(MatchResourceManager.SummonBaseCost, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         // 계절/날씨 시스템(천명.pptx 슬라이드 12/13) - 계절은 매치 시작 시 1회, 날씨는 웨이브마다
         // 서버가 굴려서 여기 NetworkVariable로 브로드캐스트함(양쪽 클라이언트/HUD가 그대로 구독).
@@ -61,10 +70,25 @@ namespace TowerDefense.Map
         public NetworkVariable<int> SelectedSeason = new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         public NetworkVariable<int> CurrentWeather = new((int)WeatherType.Clear, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        // clientId별 로드아웃(캐릭터 레벨/노드 해금) - 서버만 채우고 씀. 1:1 매치 한 판 단위라 OnNetworkDespawn에서 비움.
+        private readonly Dictionary<ulong, PlayerLoadout> _loadouts = new();
+
+        // [5단계] SP 강화 레벨 - (보드, 캐릭터 종류)별 1트랙. 필드에 캐릭터가 없어도 강화 가능(엑셀 구현 규칙).
+        // 서버가 값을 바꾸고 EnhanceLevelChangedRpc로 양쪽에 알려서 모든 피어가 같은 값을 가짐(UI 표시/사전 체크용).
+        private readonly Dictionary<(int boardIndex, string characterId), int> _enhanceLevels = new();
+
+        /// <summary>SP 강화 레벨이 바뀐 순간(모든 피어) - 강화 패널이 구독. (boardIndex, characterId, 새 레벨)</summary>
+        public event Action<int, string, int> OnEnhanceLevelChanged;
+
+        /// <summary>[서버 전용] 합성이 성사된 직후, 소멸 타워가 파괴되기 전에 발생. (boardIndex, 남는 타워, 사라질 타워)
+        /// 조작(조진호) 해제 같은 "합성 시 처리" 스킬 로직이 여기에 붙으면 됨.</summary>
+        public event Action<int, TowerUnit, TowerUnit> OnTowerMerged;
+
         private readonly Dictionary<int, PlayerBoard> _boards = new();
         private Dictionary<string, CharacterDataSO> _characterLookup;
         private bool _matchStarted;
         private bool _matchEnded;
+        private int _boardsFinishedWaves; // 마지막 웨이브(보스전 포함)까지 끝낸 보드 수 - 2가 되면 하트 비교로 승패 판정
 
         // 웨이브당 보스 랜덤 선택 캐시 - WaveDataSO 에셋 레퍼런스를 키로 씀(BoardA/BoardB 스포너가
         // 인스펙터에서 같은 WaveDataSO 에셋 리스트를 공유하는 구성을 전제함 - RequestBossForWave 참고).
@@ -78,10 +102,10 @@ namespace TowerDefense.Map
         /// InGameHUDController가 구독해서 화면 오버레이를 띄움(게임플레이 로직에는 영향 없음).</summary>
         public event Action<float> OnVisionBlockStarted;
 
-        /// <summary>매치가 끝났을 때(승패 결정) 발생 - bool은 "이 클라이언트 로컬 관점에서 내가 이겼는지".
+        /// <summary>매치가 끝났을 때(승패/무승부 결정) 발생 - MatchOutcome은 "이 클라이언트 로컬 관점의 결과".
         /// UI(결과 팝업)가 이걸 구독해서 화면을 띄움 - Map 레이어가 UI를 직접 참조하지 않도록
         /// 이벤트로만 알려주고, 실제로 뭘 보여줄지는 UI 쪽 책임으로 남겨둠(느슨한 결합).</summary>
-        public event Action<bool> OnMatchEnded;
+        public event Action<MatchOutcome> OnMatchEnded;
 
         private void Awake()
         {
@@ -99,6 +123,10 @@ namespace TowerDefense.Map
 
         public override void OnNetworkSpawn()
         {
+            // 캐릭터 레벨/노드 해금 스냅샷을 서버에 제출(호스트는 서버 겸 클라이언트라 자기 자신에게도 보냄) -
+            // 레벨 차이는 PvP에 그대로 반영됨(엑셀 구현 규칙). SubmitLoadoutRpc 참고.
+            if (IsClient) SubmitLoadoutRpc(PlayerLoadout.CaptureLocal().Pack());
+
             if (!IsServer) return;
 
             // using System(Action<bool> OnMatchEnded용으로 추가함) 때문에 System.Random이랑
@@ -124,6 +152,26 @@ namespace TowerDefense.Map
             {
                 NetworkManager.Singleton.OnClientConnectedCallback -= AssignBoardOwner;
             }
+            _loadouts.Clear();
+            _enhanceLevels.Clear();
+        }
+
+        /// <summary>클라이언트가 매치 시작 때 보내는 로드아웃 스냅샷(PlayerLoadout.Pack 문자열). 서버가 보낸 사람 id로 저장함.</summary>
+        [Rpc(SendTo.Server)]
+        private void SubmitLoadoutRpc(string packedLoadout, RpcParams rpcParams = default)
+        {
+            ulong senderId = rpcParams.Receive.SenderClientId;
+            _loadouts[senderId] = PlayerLoadout.Unpack(packedLoadout);
+        }
+
+        // 배치하는 플레이어의 레벨/노드 효과로 이 타워의 배율을 계산함. 로드아웃을 못 받았거나 매니저가 없으면
+        // 레벨 1 + 노드 효과 없음으로 안전하게 동작함. 노드 수치는 [미정]이라 지금은 보너스 합이 0.
+        private TowerStatModifiers ComputeTowerModifiers(ulong ownerClientId, CharacterDataSO character)
+        {
+            if (!_loadouts.TryGetValue(ownerClientId, out var loadout)) return TowerStatModifiers.Identity;
+
+            // 화면(노드 상세창)과 같은 계산기를 써서 표시 숫자와 실제 전투 숫자가 어긋나지 않게 함.
+            return NodeBonusCalculator.Compute(character, loadout.GetLevel(character.characterId), loadout.unlockedNodeIds);
         }
 
         private void AssignBoardOwner(ulong clientId)
@@ -159,6 +207,10 @@ namespace TowerDefense.Map
 
             if (IsServer) TryStartMatch();
         }
+
+        /// <summary>복제된 SP/소환 가격 조회(클라이언트도 정확) - 로컬 사전 체크/UI용.</summary>
+        public float GetBoardSp(int boardIndex) => boardIndex == 0 ? BoardSpA.Value : BoardSpB.Value;
+        public int GetSummonCost(int boardIndex) => boardIndex == 0 ? BoardSummonCostA.Value : BoardSummonCostB.Value;
 
         public ulong GetOwnerClientId(int boardIndex) => boardIndex == 0 ? BoardOwnerA.Value : BoardOwnerB.Value;
 
@@ -268,6 +320,14 @@ namespace TowerDefense.Map
             boardB.Resources.OnSPChanged += sp => BoardSpB.Value = sp;
             BoardSpA.Value = boardA.Resources.CurrentSP;
             BoardSpB.Value = boardB.Resources.CurrentSP;
+            boardA.Resources.OnSummonCostChanged += c => BoardSummonCostA.Value = c;
+            boardB.Resources.OnSummonCostChanged += c => BoardSummonCostB.Value = c;
+            BoardSummonCostA.Value = boardA.Resources.NextSummonCost;
+            BoardSummonCostB.Value = boardB.Resources.NextSummonCost;
+
+            // 몬스터 처치 SP는 그 몬스터가 속한 보드(스포너)의 지갑으로 들어감.
+            boardA.Spawner.OnSpRewardEvent += sp => boardA.Resources.AddSP(sp);
+            boardB.Spawner.OnSpRewardEvent += sp => boardB.Resources.AddSP(sp);
 
             // 몬스터 전송("넘어온 몬스터") - 한쪽에서 죽은 몬스터가 상대 보드로 넘어가려면 두
             // 스포너가 서로를 알아야 함. 인스펙터에서 미리 연결해두는 대신 여기서(양쪽 보드가
@@ -275,6 +335,12 @@ namespace TowerDefense.Map
             // 미리 짝지어둘 필요가 없어져서 맵이 바뀌어도(SelectedMapIndex) 그대로 동작함.
             boardA.Spawner.SetOpponentSpawner(boardB.Spawner);
             boardB.Spawner.SetOpponentSpawner(boardA.Spawner);
+            boardA.Spawner.SetCellSize(boardA.Grid.CellSize.x); // 몬스터 이동속도(칸/초) 환산용
+            boardB.Spawner.SetCellSize(boardB.Grid.CellSize.x);
+
+            // 20웨이브(보스전 포함)까지 양쪽 다 끝나면 하트 비교로 승패 판정(많은 쪽 승리, 같으면 무승부).
+            boardA.Spawner.OnAllWavesSpawned += HandleBoardWavesFinished;
+            boardB.Spawner.OnAllWavesSpawned += HandleBoardWavesFinished;
 
             // 요청사항: "웨이브는 양쪽에서 동시에 옴" - 두 보드의 웨이브를 바로 이어서 시작함.
             boardA.Spawner.StartWaves();
@@ -290,6 +356,24 @@ namespace TowerDefense.Map
             MatchEndedRpc(loserBoardIndex);
         }
 
+        // MonsterSpawner.OnAllWavesSpawned는 마지막 웨이브의 보스전(보스 처치 또는 기지 도달)이 끝난 뒤
+        // 보드당 1회 발생함 - 늦게 끝나는 쪽 보스가 아직 하트를 깎을 수 있어서 양쪽 다 끝나길 기다림.
+        private void HandleBoardWavesFinished()
+        {
+            if (!IsServer || _matchEnded) return;
+            _boardsFinishedWaves++;
+            if (_boardsFinishedWaves < 2) return;
+
+            int hpA = _boards[0].Health.CurrentHp;
+            int hpB = _boards[1].Health.CurrentHp;
+
+            // 하트 많은 쪽 승리, 같으면 무승부(loserBoardIndex = DrawBoardIndex).
+            int loser = hpA > hpB ? 1 : (hpB > hpA ? 0 : DrawBoardIndex);
+            _matchEnded = true;
+            Debug.Log($"[MatchController] 전 웨이브 종료 - 하트 A={hpA}, B={hpB} → {(loser == DrawBoardIndex ? "무승부" : $"보드 {loser} 패배")}");
+            MatchEndedRpc(loser);
+        }
+
         [Rpc(SendTo.ClientsAndHost)]
         private void MatchEndedRpc(int loserBoardIndex)
         {
@@ -303,16 +387,20 @@ namespace TowerDefense.Map
             }
             if (myBoard == null) return;
 
-            bool won = myBoard.BoardIndex != loserBoardIndex;
-            RankManager.Instance?.ReportMatchResult(won);
+            MatchOutcome outcome;
+            if (loserBoardIndex == DrawBoardIndex) outcome = MatchOutcome.Draw;
+            else outcome = myBoard.BoardIndex != loserBoardIndex ? MatchOutcome.Win : MatchOutcome.Lose;
+
+            if (outcome == MatchOutcome.Draw) RankManager.Instance?.ReportMatchDraw();
+            else RankManager.Instance?.ReportMatchResult(outcome == MatchOutcome.Win);
 
             if (MatchmakingService.Instance != null)
             {
                 _ = MatchmakingService.Instance.LeaveMatchAsync();
             }
 
-            Debug.Log($"[MatchController] 매치 종료. 내 결과: {(won ? "승리" : "패배")}");
-            OnMatchEnded?.Invoke(won); // 결과 화면 표시는 이 이벤트를 구독하는 UI 쪽 책임.
+            Debug.Log($"[MatchController] 매치 종료. 내 결과: {outcome}");
+            OnMatchEnded?.Invoke(outcome); // 결과 화면 표시는 이 이벤트를 구독하는 UI 쪽 책임.
         }
 
         /// <summary>
@@ -355,9 +443,9 @@ namespace TowerDefense.Map
                 return; // 칸이 막혀있음 - 클라이언트가 이미 로컬에서 IsBuildable을 먼저 확인하고 보내므로 정상 흐름에선 드묾
             }
 
-            // [기획 확정] 캐릭터별 개별 SP 비용(characterData.summonCost)은 더 이상 안 씀 - 소환 비용은
-            // 항상 MatchResourceManager.SummonSpCost(고정 10)로 통일됨(그 클래스 doc 참고).
-            if (!board.Resources.TrySpendSP(MatchResourceManager.SummonSpCost))
+            // 소환 가격은 보드별 누적 소환 횟수 기반(100 + 10n) - MatchResourceManager 참고.
+            float summonCost = board.Resources.NextSummonCost;
+            if (!board.Resources.TrySpendSP(summonCost))
             {
                 return; // SP 부족
             }
@@ -368,7 +456,7 @@ namespace TowerDefense.Map
             {
                 Debug.LogError("[MatchController] genericTowerVisualPrefab에 NetworkObject 컴포넌트가 없음.");
                 Destroy(instance.gameObject);
-                board.Resources.AddSP(MatchResourceManager.SummonSpCost); // 이미 낸 SP 환불
+                board.Resources.AddSP(summonCost); // 이미 낸 SP 환불(소환 횟수는 안 올림)
                 return;
             }
 
@@ -382,10 +470,101 @@ namespace TowerDefense.Map
             FitVisualToCell(instance.transform, board.Grid.CellSize);
 
             networkObject.Spawn();
+            board.Resources.CommitSummon(); // 소환 성공 확정 - 다음 소환 가격 +10
             board.Grid.MarkOccupied(cell, instance.gameObject);
             // [버그 수정 - 2026-09-29] TowerUnit이 소속 보드(board.Spawner)를 알아야 상대 보드
             // 몬스터를 잘못 타겟팅하지 않음 - TowerUnit.cs의 _ownBoardSpawner 필드 주석 참고.
-            instance.Init(characterData, board.Spawner);
+            instance.Init(characterData, board.Spawner, board.Grid.CellSize.x, ComputeTowerModifiers(senderId, characterData));
+            // 이미 올려둔 SP 강화 레벨을 새로 소환한 캐릭터에도 적용(같은 캐릭터 전부 적용 - 엑셀 구현 규칙).
+            instance.ApplyProgression(1, GetEnhanceLevel(boardIndex, characterId));
+        }
+
+        /// <summary>이 보드에서 해당 캐릭터의 SP 강화 레벨(Lv1~5, 강화 전엔 1). 모든 피어에서 동일하게 조회됨.</summary>
+        public int GetEnhanceLevel(int boardIndex, string characterId)
+        {
+            return _enhanceLevels.TryGetValue((boardIndex, characterId), out int level) ? level : 1;
+        }
+
+        /// <summary>
+        /// [합성] 같은 캐릭터 + 같은 별인 내 타워 두 개를 합쳐 별 +1(최대 5★). (toX,toY)의 타워가 남아 별이 오르고
+        /// (fromX,fromY)의 타워는 사라지며 그 칸이 비워짐. 소유권/칸/조건 검증은 전부 서버가 함(조건 불일치는 조용히 무시).
+        /// </summary>
+        [Rpc(SendTo.Server)]
+        public void RequestMergeRpc(int boardIndex, int fromX, int fromY, int toX, int toY, RpcParams rpcParams = default)
+        {
+            if (!_boards.TryGetValue(boardIndex, out var board)) return;
+            if (GetOwnerClientId(boardIndex) != rpcParams.Receive.SenderClientId) return;
+            if (fromX == toX && fromY == toY) return;
+
+            var fromCell = new Vector3Int(fromX, fromY, 0);
+            var from = TowerUnit.FindAtCell(board.Grid, fromCell);
+            var to = TowerUnit.FindAtCell(board.Grid, new Vector3Int(toX, toY, 0));
+            if (from == null || to == null || from == to) return;
+            if (from.Data == null || to.Data == null) return;
+            if (from.Data.characterId != to.Data.characterId) return;
+            if (from.Stars != to.Stars || to.Stars >= TowerProgression.MaxStars) return;
+
+            to.ApplyProgression(to.Stars + 1, GetEnhanceLevel(boardIndex, to.Data.characterId));
+            OnTowerMerged?.Invoke(boardIndex, to, from);
+
+            board.Grid.ReleaseCell(fromCell); // 슬롯 비우기
+            var fromObject = from.NetworkObject;
+            if (fromObject != null && fromObject.IsSpawned) fromObject.Despawn(true);
+        }
+
+        /// <summary>
+        /// [SP 강화] 캐릭터 종류 하나의 강화 레벨을 1 올림(Lv5까지, 구간 가격 500/1000/2500/5000 - 소속 가격 감소 노드 반영).
+        /// 필드에 그 캐릭터가 없어도 가능하고, 이미 필드에 있는 같은 캐릭터 전부에 즉시 적용됨. SP는 서버 지갑에서 차감.
+        /// 강화 패널(UI)은 이 RPC를 호출하고 OnEnhanceLevelChanged를 구독하면 됨.
+        /// </summary>
+        [Rpc(SendTo.Server)]
+        public void RequestEnhanceRpc(int boardIndex, string characterId, RpcParams rpcParams = default)
+        {
+            if (!_boards.TryGetValue(boardIndex, out var board)) return;
+            ulong senderId = rpcParams.Receive.SenderClientId;
+            if (GetOwnerClientId(boardIndex) != senderId) return;
+            if (_characterLookup == null || !_characterLookup.TryGetValue(characterId, out var characterData)) return;
+
+            int level = GetEnhanceLevel(boardIndex, characterId);
+            int baseCost = TowerProgression.GetEnhanceCost(level);
+            if (baseCost <= 0) return; // 이미 최대 레벨
+
+            float discountPercent = ComputeEnhanceDiscountPercent(senderId, characterData);
+            int cost = Mathf.Max(0, Mathf.RoundToInt(baseCost * (1f - discountPercent / 100f)));
+            if (cost > 0 && !board.Resources.TrySpendSP(cost)) return; // SP 부족
+
+            level++;
+            _enhanceLevels[(boardIndex, characterId)] = level;
+
+            var towers = TowerUnit.All;
+            for (int i = 0; i < towers.Count; i++)
+            {
+                var t = towers[i];
+                if (t == null || t.Data == null) continue;
+                if (t.OwnBoardSpawner != board.Spawner || t.Data.characterId != characterId) continue;
+                t.ApplyProgression(t.Stars, level);
+            }
+
+            EnhanceLevelChangedRpc(boardIndex, characterId, level);
+        }
+
+        [Rpc(SendTo.ClientsAndHost)]
+        private void EnhanceLevelChangedRpc(int boardIndex, string characterId, int level)
+        {
+            _enhanceLevels[(boardIndex, characterId)] = level;
+            OnEnhanceLevelChanged?.Invoke(boardIndex, characterId, level);
+        }
+
+        // 소속 라인 노드의 "SP 강화 가격 -n%" 합(무소속은 소속 효과를 받지 않음). 수치 [미정]이라 지금은 0.
+        private float ComputeEnhanceDiscountPercent(ulong ownerClientId, CharacterDataSO character)
+        {
+            var tree = TechTreeManager.Instance;
+            if (tree == null || !NodeTreeLines.ReceivesLineEffect(character.code)) return 0f;
+            if (!_loadouts.TryGetValue(ownerClientId, out var loadout)) return 0f;
+
+            string line = NodeTreeLines.GetLine(character.code);
+            float percent = tree.GetBonusPercent(NodeEffectType.LineEnhancePriceDiscountPercent, line, loadout.unlockedNodeIds);
+            return Mathf.Clamp(percent, 0f, 100f);
         }
 
         // 스프라이트의 "스케일 1일 때 월드 크기"(SpriteRenderer.sprite.bounds.size) 대비 그리드 한 칸

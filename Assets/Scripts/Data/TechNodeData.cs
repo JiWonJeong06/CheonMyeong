@@ -34,5 +34,40 @@ namespace TowerDefense.Data
         // CharacterDatabase를 보고 캐릭터 수만큼 런타임에 자동으로 만들어서 넣어줌(JSON엔 안 써도 됨).
         // 해금 여부/비용/통화(Gold or Gem)는 전부 CharacterUnlockManager/CharacterDataSO 쪽 값을 그대로 따름.
         public string linkedCharacterId;
+
+        // 노드 효과(엑셀 '노드 트리' 시트 - 수치는 기획자 배치 후 결정, 기본값 = 효과 없음).
+        // effectType: NodeEffectType 이름 문자열("LineAttackPercent" 등, 비우면 효과 없음 - JsonUtility는
+        // enum을 이름으로 못 읽어서 문자열로 받고 아래 ParsedEffectType에서 한 번만 변환함).
+        // effectLine: 소속 효과가 적용될 라인("천명회" 등). 전체 효과(GlobalAttackPercent)는 비워둠.
+        // effectValue: 퍼센트 단위(5 = +5%).
+        // 조직(허브) 소속: 허브 노드는 천명회·흑연회·비선청·지하문·풍류단·화랑회 6개이고 "해금하는 노드가 아니라
+        // 폴더 같은 묶음"임. 캐릭터 노드는 코드로 자동 배정되고, 스탯 노드는 JSON에서 hubLine에 조직 이름을 적으면
+        // 그 허브에 연결됨(비워두면 TechTreeManager가 선행 조건 없는 뿌리 노드를 6개 허브에 돌아가며 배정).
+        public string hubLine;
+        public bool isHub; // 허브 노드(자동 생성, 항상 열려 있음, 눌러도 해금/상세창 없음)
+
+        public string effectType;
+        public string effectLine;
+        public float effectValue;
+
+        [NonSerialized] private NodeEffectType _parsedEffectType;
+        [NonSerialized] private bool _effectTypeParsed;
+
+        /// <summary>effectType 문자열을 enum으로 변환(첫 조회 때 1회, 이후 캐시 - 매 호출 할당 없음).</summary>
+        public NodeEffectType ParsedEffectType
+        {
+            get
+            {
+                if (!_effectTypeParsed)
+                {
+                    _effectTypeParsed = true;
+                    _parsedEffectType = !string.IsNullOrEmpty(effectType) &&
+                                        Enum.TryParse(effectType, out NodeEffectType parsed)
+                        ? parsed
+                        : NodeEffectType.None;
+                }
+                return _parsedEffectType;
+            }
+        }
     }
 }

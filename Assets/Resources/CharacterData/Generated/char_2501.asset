@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_2501
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 2501
+  characterId: char_2501
+  displayName: "\uC9C4\uD61C\uC601"
+  faction: "\uC9C0\uD558\uBB38"
+  description: 
+  weapon: "\uBD93"
+  attackType: 0
+  isSupport: 1
+  mergeType: 0
+  targetPriority: 0
+  baseDamage: 97
+  attackInterval: 1.2
+  range: 1
+  starAttackPower: 36
+  starAttackInterval: 0
+  gaugePerHit: 0
+  killType: 0
+  gaugePerKill: 10
+  ultimateGauge: 320
+  skill:
+    name: "\uBA39"
+    description: "\uBA39\uC744 \uB358\uC838 \uC0AC\uAC70\uB9AC \uB0B4 \uB79C\uB364
+      \uC704\uCE58\uC5D0 \uBC18\uACBD 1\uCE78 \uBA39 \uC7A5\uD310\uC744 \uB9CC\uB4ED\uB2C8\uB2E4.
+      \uC7A5\uD310\uC740 m\uCD08 \uB3D9\uC548 \uC720\uC9C0\uB418\uBA70, \uC704\uC758
+      \uBAAC\uC2A4\uD130\uB294 n% \uC18D\uB3C4 \uC800\uD558. \uC7A5\uD310\uC774 \uC0AC\uB77C\uC9C4
+      \uB4A4 k\uCD08\uAC00 \uC9C0\uB098\uBA74 \uB2E4\uC2DC \uB358\uC9D1\uB2C8\uB2E4.
+      \uBCF8\uC778\uC740 \uACF5\uACA9\uD558\uC9C0 \uBABB\uD558\uB294 \uBC84\uD504\uD615
+      \uCE90\uB9AD\uD130\uC785\uB2C8\uB2E4."
+    parameters:
+    - key: inkSlowPercent
+      meaning: "\uBA39 \uC7A5\uD310 \uAC10\uC18D n% (\uBC18\uACBD 1\uCE78, 3\uCD08)"
+      values:
+      - 8
+      - 10
+      - 12
+      - 15
+      - 20
+    - key: inkDurationSeconds
+      meaning: "\uBA39 \uC7A5\uD310 \uC720\uC9C0 m\uCD08"
+      values:
+      - 3
+      - 3.1
+      - 3.3
+      - 3.6
+      - 4
+    - key: inkCooldownSeconds
+      meaning: "\uC7A5\uD310\uC774 \uC0AC\uB77C\uC9C4 \uB4A4 k\uCD08 \uD6C4 \uB2E4\uC2DC
+        \uB358\uC9D0 (\uC9E7\uC744\uC218\uB85D \uC88B\uC74C)"
+      values:
+      - 3
+      - 2.9
+      - 2.7
+      - 2.4
+      - 2
+  ultimate:
+    name: "\uBD93"
+    description: "(10\uCD08 \uB3D9\uC548)\uC0C1\uB300 \uD544\uB4DC\uC5D0 \uCD94\uAC00
+      \uC774\uC18D n% \uBD80\uC5EC\uD569\uB2C8\uB2E4. (\uC911\uCCA9 \uAC00\uB2A5,
+      \uCD5C\uB300 30%)"
+    parameters:
+    - key: enemyMoveSpeedPercent
+      meaning: "10\uCD08 \uB3D9\uC548 \uC0C1\uB300 \uD544\uB4DC \uC774\uC18D n% \uC99D\uAC00
+        (\uC911\uCCA9, \uCD5C\uB300 30%)"
+      values:
+      - 5
+      - 6.5
+      - 8
+      - 11
+      - 15
+  isStarter: 0
+  unlockCost: 100
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

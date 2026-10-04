@@ -57,8 +57,21 @@ namespace TowerDefense.Monsters
                   "통과 시 라이프 피해(damageToBase)도 보통 일반 몬스터(1)와 다르게 2로 잡음.")]
         public bool isBoss;
 
-        [Tooltip("이 몬스터를 처치했을 때 지급되는 골드 - 더미값, 밸런스 확정 전")]
+        [Tooltip("[사용 안 함] 예전 골드 보상 필드 - 처치 보상은 killSp(SP)로 대체됨.")]
         public int goldReward = 5;
+
+        [Header("처치 보상 (SP)")]
+        [Tooltip("1웨이브 기준 처치 SP - 엑셀: 병사 15 / 기마병사 9 / 방패병사 45 / 보스 450. 0이면 보상 없음.")]
+        public float killSp = 0f;
+
+        [Tooltip("웨이브당 증가량(절대값) - 일반 몬스터는 killSp × 0.4(엑셀 +40%/웨이브, 1웨이브 기준 선형), 보스는 150.")]
+        public float killSpPerWave = 0f;
+
+        /// <summary>wave(1부터)번째 웨이브의 처치 SP = killSp + killSpPerWave × (wave-1).</summary>
+        public float GetKillSp(int wave)
+        {
+            return killSp + killSpPerWave * Mathf.Max(0, wave - 1);
+        }
 
         [Tooltip("이 몬스터가 경로 끝(플레이어 기지)까지 도달했을 때 기지에 주는 피해량 - " +
                   "기획서 기준 일반 몬스터 1, 보스 2")]

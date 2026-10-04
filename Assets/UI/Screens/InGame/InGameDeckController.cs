@@ -18,13 +18,13 @@ namespace TowerDefense.UI
     /// 나중에 바뀌면 InGameDeck.uxml의 슬롯 개수도 같이 맞춰줘야 함 - 자동으로 안 늘어남.
     ///
     /// [기획 확정 - 소환 비용 고정] 캐릭터별 개별 SP 비용(CharacterDataSO.summonCost)은 더 이상 안
-    /// 씀 - 소환 비용은 항상 MatchResourceManager.SummonSpCost(고정 10)로 통일됨. 그래서 카드마다
+    /// 씀 - 소환 비용은 모든 캐릭터 공통이며 소환할 때마다 +10(MatchController.BoardSummonCostA/B로 복제됨). 그래서 카드마다
     /// 다른 비용 숫자를 보여주던 배지는 UI에서 제거했고(InGameDeck.uxml 참고), 카드 흐림 표시
-    /// (RefreshAffordability)도 이제 그 고정값 하나로만 판단함.
+    /// (RefreshAffordability)도 그 현재 가격 하나로만 판단함.
     ///
     /// 카드 슬롯들 아래 남는 공간엔 누적 "SP 소모값" 표시가 하나 더 있음(sp-spent-label) - 이것도
-    /// TowerPlacementController.OnTowerPlaced 이벤트(로컬에서 소환 요청을 보낸 시점)가 발생할 때마다
-    /// MatchResourceManager.SummonSpCost만큼 늘어나는 순수 표시용 누적 카운터임.
+    /// 서버가 복제한 다음 소환 가격(BoardSummonCost)에서 소환 횟수를 역산해 계산하는 순수 표시용 값임
+    /// (로컬 요청 시점이 아니라 서버 확정 후 갱신됨).
     ///
     /// [카메라 레이아웃 연동] 이 덱 패널(.deck-root)이 실제로 화면에서 차지하는 폭을 첫 레이아웃
     /// 해석 직후(GeometryChangedEvent) 측정해서 InGameDeckLayout을 통해 TowerDefense.Map.
@@ -41,7 +41,8 @@ namespace TowerDefense.UI
         private UIDocument _document;
         private VisualElement _deckRoot;
         private Label _spSpentLabel;
-        private int _spSpent;
+        private float _lastSp;
+        private int _lastCost = MatchResourceManager.SummonBaseCost;
         private bool _reservedFractionReported;
 
         private readonly Button[] _slotButtons = new Button[DeckManager.DeckSize];
@@ -53,6 +54,8 @@ namespace TowerDefense.UI
         private PlayerBoard _myBoard;
         private NetworkVariable<float> _boundMySpVar;
         private NetworkVariable<float>.OnValueChangedDelegate _mySpHandler;
+        private NetworkVariable<int> _boundMyCostVar;
+        private NetworkVariable<int>.OnValueChangedDelegate _myCostHandler;
         private Coroutine _bindRoutine;
 
         private TowerPlacementController _boundPlacementController;
@@ -71,7 +74,6 @@ namespace TowerDefense.UI
             _deckRoot.RegisterCallback<GeometryChangedEvent>(OnDeckRootGeometryChanged);
 
             _spSpentLabel = root.Q<Label>("sp-spent-label");
-            _spSpent = 0;
             RefreshSpSpentLabel();
 
             for (int i = 0; i < DeckManager.DeckSize; i++)
@@ -255,11 +257,14 @@ namespace TowerDefense.UI
 
             _mySpHandler = (_, sp) => RefreshAffordability(sp);
             _boundMySpVar.OnValueChanged += _mySpHandler;
-            RefreshAffordability(_boundMySpVar.Value); // 구독 시점의 현재값은 OnValueChanged가 안 불러주므로 최초 1회 직접 반영
 
-            while (TowerPlacementController.Instance == null) yield return null;
-            _boundPlacementController = TowerPlacementController.Instance;
-            _boundPlacementController.OnTowerPlaced += OnTowerPlaced;
+            _boundMyCostVar = myBoardIsA ? mc.BoardSummonCostA : mc.BoardSummonCostB;
+            _myCostHandler = (_, cost) => { _lastCost = cost; RefreshAffordability(_lastSp); RefreshSpSpentLabel(); };
+            _boundMyCostVar.OnValueChanged += _myCostHandler;
+            _lastCost = _boundMyCostVar.Value;
+
+            RefreshAffordability(_boundMySpVar.Value); // 구독 시점의 현재값은 OnValueChanged가 안 불러주므로 최초 1회 직접 반영
+            RefreshSpSpentLabel();
 
             _bindRoutine = null;
         }
@@ -270,32 +275,30 @@ namespace TowerDefense.UI
             {
                 _boundMySpVar.OnValueChanged -= _mySpHandler;
             }
+            if (_boundMyCostVar != null && _myCostHandler != null)
+            {
+                _boundMyCostVar.OnValueChanged -= _myCostHandler;
+            }
             _myBoard = null;
             _boundMySpVar = null;
             _mySpHandler = null;
-
-            if (_boundPlacementController != null)
-            {
-                _boundPlacementController.OnTowerPlaced -= OnTowerPlaced;
-            }
-            _boundPlacementController = null;
-        }
-
-        private void OnTowerPlaced()
-        {
-            _spSpent += (int)MatchResourceManager.SummonSpCost;
-            RefreshSpSpentLabel();
+            _boundMyCostVar = null;
+            _myCostHandler = null;
         }
 
         private void RefreshSpSpentLabel()
         {
             if (_spSpentLabel == null) return;
-            _spSpentLabel.text = $"SP 소모: {_spSpent}";
+            // 누적 소모량은 소환 횟수 n = (현재 가격 - 100) / 10에서 역산: 100n + 10 × n(n-1)/2
+            int n = (_lastCost - MatchResourceManager.SummonBaseCost) / MatchResourceManager.SummonCostStep;
+            int spent = MatchResourceManager.SummonBaseCost * n + MatchResourceManager.SummonCostStep * n * (n - 1) / 2;
+            _spSpentLabel.text = $"SP 소모: {spent} (다음 {_lastCost})";
         }
 
         private void RefreshAffordability(float currentSP)
         {
-            bool affordable = currentSP >= MatchResourceManager.SummonSpCost;
+            _lastSp = currentSP;
+            bool affordable = currentSP >= _lastCost;
             for (int i = 0; i < DeckManager.DeckSize; i++)
             {
                 var data = _slotData[i];

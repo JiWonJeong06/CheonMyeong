@@ -57,12 +57,19 @@ namespace TowerDefense.Map
             }
         }
 
+        // 드래그 합성 상태 - 내 타워 위에서 눌러 다른 타워 위에서 떼면 합성 요청을 보냄.
+        private bool _dragging;
+        private Vector3Int _dragFromCell;
+
         private void Update()
         {
             if (Mouse.current == null) return;
-            if (!Mouse.current.leftButton.wasPressedThisFrame) return;
 
-            TryPlaceAtPointer();
+            // [디버그] E 키: 선택된 캐릭터의 SP 강화 1단계 - 강화 패널(정지원 파트)이 붙기 전 테스트용. 패널 연결 후 제거할 것.
+            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) DebugEnhanceSelected();
+
+            if (Mouse.current.leftButton.wasPressedThisFrame) OnPointerDown();
+            else if (Mouse.current.leftButton.wasReleasedThisFrame) OnPointerUp();
         }
 
         /// <summary>현재 선택된 캐릭터. InGameDeckController가 카드 선택 상태를 되돌리거나
@@ -72,19 +79,22 @@ namespace TowerDefense.Map
         // 인게임 덱 UI(InGameDeckController)가 카드를 클릭하면 이 메서드로 현재 선택된 캐릭터를 넘겨줌.
         public void SetSelectedCharacter(CharacterDataSO character) => selectedCharacter = character;
 
-        private void TryPlaceAtPointer()
+        // 포인터가 가리키는 내 보드의 칸. UI 위/팝업 중/보드 미준비면 false.
+        private bool TryGetPointerCell(out PlayerBoard board, out Vector3Int cell)
         {
-            if (_mainCamera == null || selectedCharacter == null || MatchController.Instance == null) return;
+            board = null;
+            cell = default;
+            if (_mainCamera == null || MatchController.Instance == null) return false;
 
             // HUD 버튼/덱 카드 위에서의 클릭(InGamePointerOverUI)이나 모달 팝업이 열려있는 동안의
             // 클릭(PopupManager.HasOpenPopups)은 보드 클릭으로 처리하면 안 됨 - UI Toolkit 런타임
             // 패널은 uGUI EventSystem을 안 거쳐서 이렇게 명시적으로 걸러줘야 함(TowerPlacementController
             // 클래스 doc, InGamePointerOverUI 참고).
-            if (InGamePointerOverUI.IsPointerOverUI) return;
-            if (PopupManager.Instance != null && PopupManager.Instance.HasOpenPopups) return;
+            if (InGamePointerOverUI.IsPointerOverUI) return false;
+            if (PopupManager.Instance != null && PopupManager.Instance.HasOpenPopups) return false;
 
-            var myBoard = MatchController.Instance.GetLocalBoard();
-            if (myBoard == null || myBoard.Grid == null) return; // 아직 배정/초기화 전
+            board = MatchController.Instance.GetLocalBoard();
+            if (board == null || board.Grid == null) return false; // 아직 배정/초기화 전
 
             Vector2 screenPos = Mouse.current.position.ReadValue();
             // ScreenToWorldPoint의 세 번째 인자는 "카메라로부터의 거리"임 - 여기에 0을 넘기면
@@ -94,24 +104,97 @@ namespace TowerDefense.Map
             Vector3 worldPos = _mainCamera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, distanceToZeroPlane));
             worldPos.z = 0f; // 2D 프로젝트라 최종적으로 z=0 평면에 명시적으로 고정
 
-            var cell = myBoard.Grid.WorldToCell(worldPos);
+            cell = board.Grid.WorldToCell(worldPos);
+            return true;
+        }
+
+        private void OnPointerDown()
+        {
+            _dragging = false;
+            if (!TryGetPointerCell(out var board, out var cell)) return;
+
+            // 내 타워가 있는 칸을 누르면 배치가 아니라 합성 드래그 시작(클라이언트는 그리드 점유 정보가 없어
+            // TowerUnit 목록으로 조회함).
+            if (TowerUnit.FindAtCell(board.Grid, cell) != null)
+            {
+                _dragging = true;
+                _dragFromCell = cell;
+                return;
+            }
+
+            TryPlaceAt(board, cell);
+        }
+
+        private void OnPointerUp()
+        {
+            if (!_dragging) return;
+            _dragging = false;
+
+            if (!TryGetPointerCell(out var board, out var cell)) return;
+            if (cell == _dragFromCell) return; // 그냥 클릭 - 아무 일 없음
+
+            var from = TowerUnit.FindAtCell(board.Grid, _dragFromCell);
+            var to = TowerUnit.FindAtCell(board.Grid, cell);
+            if (from == null || to == null || from.Data == null || to.Data == null) return;
+
+            // 서버가 최종 검증하지만(같은 캐릭터 + 같은 별, 최대 5★) 로컬에서 먼저 알려줘야 왜 안 되는지 알 수 있음.
+            if (from.Data.characterId != to.Data.characterId || from.Stars != to.Stars)
+            {
+                ToastController.Instance?.Show("같은 캐릭터 + 같은 별끼리만 합성할 수 있습니다");
+                return;
+            }
+            if (to.Stars >= TowerProgression.MaxStars)
+            {
+                ToastController.Instance?.Show("이미 최대 별입니다");
+                return;
+            }
+
+            MatchController.Instance.RequestMergeRpc(board.BoardIndex, _dragFromCell.x, _dragFromCell.y, cell.x, cell.y);
+        }
+
+        private void TryPlaceAt(PlayerBoard myBoard, Vector3Int cell)
+        {
+            if (selectedCharacter == null) return;
+
             if (!myBoard.Grid.IsBuildable(cell))
             {
                 ToastController.Instance?.Show("여기엔 지을 수 없습니다");
                 return;
             }
 
-            // [기획 확정] 캐릭터별 개별 SP 비용(summonCost)은 더 이상 안 씀 - 소환 비용은 항상
-            // MatchResourceManager.SummonSpCost(고정 10)로 통일됨(MatchResourceManager.cs 클래스 doc 참고).
-            if (myBoard.Resources != null && myBoard.Resources.CurrentSP < MatchResourceManager.SummonSpCost)
+            // 소환 가격(100 + 10n)과 SP는 서버가 복제한 NetworkVariable 값으로 사전 체크함
+            // (클라이언트 쪽 MatchResourceManager 사본은 갱신되지 않음). 최종 판정은 서버가 함.
+            var mc = MatchController.Instance;
+            if (mc.GetBoardSp(myBoard.BoardIndex) < mc.GetSummonCost(myBoard.BoardIndex))
             {
                 ToastController.Instance?.Show("SP가 부족합니다");
                 return;
             }
 
             // 최종 SP 차감/타워 생성은 서버가 함 - 여기서는 요청만 보냄.
-            MatchController.Instance.RequestPlaceTowerRpc(myBoard.BoardIndex, cell.x, cell.y, selectedCharacter.characterId);
+            mc.RequestPlaceTowerRpc(myBoard.BoardIndex, cell.x, cell.y, selectedCharacter.characterId);
             OnTowerPlaced?.Invoke();
+        }
+
+        private void DebugEnhanceSelected()
+        {
+            var mc = MatchController.Instance;
+            var board = mc != null ? mc.GetLocalBoard() : null;
+            if (board == null || selectedCharacter == null) return;
+
+            int level = mc.GetEnhanceLevel(board.BoardIndex, selectedCharacter.characterId);
+            int cost = TowerProgression.GetEnhanceCost(level);
+            if (cost <= 0)
+            {
+                ToastController.Instance?.Show("이미 최대 강화입니다");
+                return;
+            }
+            if (mc.GetBoardSp(board.BoardIndex) < cost)
+            {
+                ToastController.Instance?.Show("SP가 부족합니다");
+                return;
+            }
+            mc.RequestEnhanceRpc(board.BoardIndex, selectedCharacter.characterId);
         }
     }
 }

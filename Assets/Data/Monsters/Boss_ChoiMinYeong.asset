@@ -15,14 +15,16 @@ MonoBehaviour:
   monsterId: boss_choi_min_yeong
   displayName: "\uCD5C\uBBFC\uC601"
   maxHp: 10
-  hpMultiplier: 1
+  hpMultiplier: 0.8
   moveSpeedMultiplier: 1
-  moveSpeed: 2
+  moveSpeed: 0.5
   spawnWeight: 0
   isBoss: 1
   goldReward: 5
+  killSp: 450
+  killSpPerWave: 150
   damageToBase: 2
-  prefab: {fileID: 5542756559366482663, guid: 247c58b82b75c834db37931311e33028, type: 3}
+  prefab: {fileID: 5542756559366482663, guid: 94e4f9cc67247f248b40b7fee4bf5d76, type: 3}
   iconSprite: {fileID: 0}
   abilityName: "\uC18C\uD658\uC220"
   abilityDescription: "\uBAAC\uC2A4\uD130 5\uB9C8\uB9AC \uC18C\uD658"

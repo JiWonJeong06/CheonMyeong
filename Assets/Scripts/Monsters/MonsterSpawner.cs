@@ -67,9 +67,31 @@ namespace TowerDefense.Monsters
     /// (ApplyOneTimeKnockbackToMine). 그 외 몬스터 쪽 수치 효과(이동속도/도트/회복/보호막)는
     /// SpawnMonster가 스폰되는 모든 몬스터의 Init에 _currentWeather를 그대로 넘겨서 고정시키고,
     /// 실제 적용은 MonsterPathFollower/WeatherEffectTable이 담당함(단일 책임 유지).
+    ///
+    /// [체력 공식 변경 - 천명_통합.xlsx(2026-10) 기준] 웨이브 표(WaveDataSO.soldierBaselineHp/
+    /// bossBaselineHp)는 더 이상 쓰지 않음. 병사 체력은 "성장 시계"(_growthSeconds, 웨이브 스폰 구간에서만
+    /// 흐르고 보스전·웨이브 사이 대기에서는 멈춤) 기준 연속 함수 SoldierHpAt(t) = 120 × 1.52^(t/80)이고,
+    /// 같은 웨이브 안에서도 스폰마다 조금씩 올라감. 일반 몬스터 체력 = SoldierHpAt × hpMultiplier,
+    /// 보스 체력 = SoldierHpAt(웨이브 스폰 종료 시점) × 85 × 보스 hpMultiplier + 남은 몬스터 체력 합.
+    /// 전송받은 몬스터는 원래 체력을 그대로 유지함(NotifyMonsterKilledForTransfer 참고).
+    ///
+    /// [이동속도 단위] MonsterDataSO.moveSpeed는 "칸/초"임(엑셀 속도값 ÷ 10). 월드 단위 속도는
+    /// moveSpeed × moveSpeedMultiplier × 칸 크기(SetCellSize)로 MonsterPathFollower가 계산함.
     /// </summary>
     public class MonsterSpawner : MonoBehaviour
     {
+        // 엑셀 몬스터 시트 기준 체력 곡선 상수 - 밸런스 수정 시 여기만 고치면 됨.
+        public const float SoldierBaseHp = 120f;        // t=0 병사 체력
+        public const float HpGrowthPerPeriod = 1.52f;   // 80초마다 곱해지는 배율
+        public const float HpGrowthPeriodSeconds = 80f; // 성장 주기(웨이브 길이와 같지만 별개 상수)
+        public const float BossHpSoldierMultiple = 85f; // 보스 기본 체력 = 웨이브 종료 시점 병사 체력 × 85
+
+        /// <summary>성장 시계 t초 시점의 병사 체력 - 스폰마다 1회 계산이라 Mathf.Pow 비용은 무시 가능.</summary>
+        public static float SoldierHpAt(float growthSeconds)
+        {
+            return SoldierBaseHp * Mathf.Pow(HpGrowthPerPeriod, growthSeconds / HpGrowthPeriodSeconds);
+        }
+
         [Tooltip("몬스터가 따라갈 경로 - 웨이포인트 순서대로 이동함. NavMesh 도입 여부는 기획 미확정")]
         [SerializeField] private Transform[] waypoints;
 
@@ -87,6 +109,9 @@ namespace TowerDefense.Monsters
         private Coroutine _waveRoutine;
         private WaveDataSO _currentWave; // 몬스터 전송 캡(ownMonsterCount) 계산용 - RunWaveSpawning 진입 시 갱신
         private int _transferredThisWave; // 이번 웨이브에서 상대로부터 받아 스폰한 개체 수 - 매 웨이브 시작 시 0으로 리셋
+        private int _waveNumber;
+        private float _growthSeconds; // 체력 성장 시계(초) - 웨이브 스폰 구간에서만 증가, 보스전 중 정지
+        private float _cellSize = 1f;  // 월드 단위 칸 크기 - MatchController가 SetCellSize로 주입(이동속도 환산용)
         private WeatherType _currentWeather; // 이번 웨이브의 날씨(MatchController.RequestWeatherForWave) - 이 웨이브에서 스폰되는 모든 몬스터에 고정으로 물려줌
 
         private bool IsServer => NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer;
@@ -96,6 +121,12 @@ namespace TowerDefense.Monsters
 
         /// <summary>마지막 웨이브까지 전부 스폰 완료됐을 때 1회 발생(서버에서만 발생함, 아직 살아있는 몬스터가 남아있을 수 있음).</summary>
         public event Action OnAllWavesSpawned;
+
+        /// <summary>처치/보스 도달로 이 보드가 SP를 받을 때 발생(서버 전용) - MatchController가 이 보드의 지갑(AddSP)에 연결함.</summary>
+        public event Action<float> OnSpRewardEvent;
+
+        /// <summary>지금 진행 중인 웨이브 번호(1부터, 시작 전 0) - 처치 보상의 웨이브 스케일 기준.</summary>
+        public int CurrentWaveNumber => _waveNumber;
 
         private void OnDisable()
         {
@@ -122,6 +153,8 @@ namespace TowerDefense.Monsters
                 Debug.LogWarning("[MonsterSpawner] 이미 웨이브가 진행 중임.");
                 return;
             }
+            _growthSeconds = 0f;
+            _waveNumber = 0;
             _waveRoutine = StartCoroutine(RunWaves());
         }
 
@@ -132,6 +165,7 @@ namespace TowerDefense.Monsters
                 if (wave == null) continue;
 
                 _transferredThisWave = 0; // 웨이브당 캡이라 새 웨이브 시작 시 리셋
+                _waveNumber++;
 
                 // 계절/날씨(천명.pptx 슬라이드 12/13) - 이 웨이브의 날씨를 서버 권위로 확정함
                 // (MatchController가 WaveDataSO 레퍼런스 기준으로 캐싱하므로 상대 보드 스포너가
@@ -178,10 +212,14 @@ namespace TowerDefense.Monsters
                 var monster = PickWeightedRandom(wave.monsterPool);
                 if (monster != null)
                 {
-                    float actualHp = wave.soldierBaselineHp * monster.hpMultiplier;
+                    float actualHp = SoldierHpAt(_growthSeconds) * monster.hpMultiplier;
                     SpawnMonster(monster, actualHp);
                 }
-                if (interval > 0f) yield return new WaitForSeconds(interval);
+                if (interval > 0f)
+                {
+                    yield return new WaitForSeconds(interval);
+                    _growthSeconds += interval; // 웨이브 길이만큼만 누적됨(보스전/웨이브 사이 대기에서는 안 흐름)
+                }
             }
         }
 
@@ -231,7 +269,7 @@ namespace TowerDefense.Monsters
                 yield break;
             }
 
-            float bossHp = wave.bossBaselineHp * bossData.hpMultiplier + leftoverHp;
+            float bossHp = SoldierHpAt(_growthSeconds) * BossHpSoldierMultiple * bossData.hpMultiplier + leftoverHp;
             SpawnMonster(bossData, bossHp);
 
             // 보스는 1마리뿐이라 인스턴스 참조를 직접 들고 대기해도 되지만, 풀링 특성상
@@ -317,7 +355,13 @@ namespace TowerDefense.Monsters
                 networkObject.Spawn(); // 처음 꺼낸 인스턴스거나, 풀에서 재사용하며 Despawn(false)됐던 걸 다시 등록
             }
 
-            instance.GetComponent<MonsterPathFollower>().Init(data, actualMaxHp, waypoints, this, isTransferred, _currentWeather);
+            instance.GetComponent<MonsterPathFollower>().Init(data, actualMaxHp, waypoints, this, isTransferred, _currentWeather, _cellSize);
+        }
+
+        /// <summary>월드 단위 칸 크기 주입(MatchController.TryStartMatch) - moveSpeed(칸/초)를 월드 속도로 환산할 때 씀.</summary>
+        public void SetCellSize(float cellSize)
+        {
+            if (cellSize > 0f) _cellSize = cellSize;
         }
 
         /// <summary>MatchController.TryStartMatch()가 두 보드 모두 준비된 시점에 서로를 연결해줌 -
@@ -386,6 +430,21 @@ namespace TowerDefense.Monsters
         {
             if (!IsServer) return;
             OnMonsterReachedEndEvent?.Invoke(data);
+
+            // 엑셀: 보스는 "못 잡으면 절반" - 기지까지 간 보스는 처치 SP의 50%만 지급함(일반 몬스터는 0).
+            if (data != null && data.isBoss)
+            {
+                float sp = data.GetKillSp(_waveNumber) * 0.5f;
+                if (sp > 0f) OnSpRewardEvent?.Invoke(sp);
+            }
+        }
+
+        /// <summary>MonsterPathFollower.Die()가 부름(서버 전용, 전송받은 개체 포함) - 웨이브 스케일 처치 SP 지급.</summary>
+        public void NotifyMonsterKilled(MonsterDataSO data)
+        {
+            if (!IsServer || data == null) return;
+            float sp = data.GetKillSp(_waveNumber);
+            if (sp > 0f) OnSpRewardEvent?.Invoke(sp);
         }
     }
 }

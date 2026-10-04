@@ -1,0 +1,404 @@
+{
+ "entries": [
+  {
+   "level": 1,
+   "attackMultiplier": 1.0,
+   "intervalMultiplier": 1.0,
+   "isBreakthrough": false,
+   "goldToNext": 100,
+   "medalToNext": 0
+  },
+  {
+   "level": 2,
+   "attackMultiplier": 1.014246,
+   "intervalMultiplier": 0.995456,
+   "isBreakthrough": false,
+   "goldToNext": 300,
+   "medalToNext": 0
+  },
+  {
+   "level": 3,
+   "attackMultiplier": 1.028696,
+   "intervalMultiplier": 0.990933,
+   "isBreakthrough": false,
+   "goldToNext": 580,
+   "medalToNext": 0
+  },
+  {
+   "level": 4,
+   "attackMultiplier": 1.043351,
+   "intervalMultiplier": 0.986431,
+   "isBreakthrough": false,
+   "goldToNext": 920,
+   "medalToNext": 0
+  },
+  {
+   "level": 5,
+   "attackMultiplier": 1.058215,
+   "intervalMultiplier": 0.981949,
+   "isBreakthrough": false,
+   "goldToNext": 1310,
+   "medalToNext": 0
+  },
+  {
+   "level": 6,
+   "attackMultiplier": 1.073291,
+   "intervalMultiplier": 0.977488,
+   "isBreakthrough": false,
+   "goldToNext": 1760,
+   "medalToNext": 0
+  },
+  {
+   "level": 7,
+   "attackMultiplier": 1.088581,
+   "intervalMultiplier": 0.973046,
+   "isBreakthrough": false,
+   "goldToNext": 2250,
+   "medalToNext": 0
+  },
+  {
+   "level": 8,
+   "attackMultiplier": 1.10409,
+   "intervalMultiplier": 0.968625,
+   "isBreakthrough": false,
+   "goldToNext": 2790,
+   "medalToNext": 0
+  },
+  {
+   "level": 9,
+   "attackMultiplier": 1.119819,
+   "intervalMultiplier": 0.964224,
+   "isBreakthrough": false,
+   "goldToNext": 3360,
+   "medalToNext": 0
+  },
+  {
+   "level": 10,
+   "attackMultiplier": 1.135772,
+   "intervalMultiplier": 0.959843,
+   "isBreakthrough": true,
+   "goldToNext": 3980,
+   "medalToNext": 10
+  },
+  {
+   "level": 11,
+   "attackMultiplier": 1.151953,
+   "intervalMultiplier": 0.955482,
+   "isBreakthrough": false,
+   "goldToNext": 4640,
+   "medalToNext": 0
+  },
+  {
+   "level": 12,
+   "attackMultiplier": 1.168364,
+   "intervalMultiplier": 0.951141,
+   "isBreakthrough": false,
+   "goldToNext": 5330,
+   "medalToNext": 0
+  },
+  {
+   "level": 13,
+   "attackMultiplier": 1.185009,
+   "intervalMultiplier": 0.946819,
+   "isBreakthrough": false,
+   "goldToNext": 6060,
+   "medalToNext": 0
+  },
+  {
+   "level": 14,
+   "attackMultiplier": 1.201891,
+   "intervalMultiplier": 0.942517,
+   "isBreakthrough": false,
+   "goldToNext": 6820,
+   "medalToNext": 0
+  },
+  {
+   "level": 15,
+   "attackMultiplier": 1.219014,
+   "intervalMultiplier": 0.938235,
+   "isBreakthrough": false,
+   "goldToNext": 7620,
+   "medalToNext": 0
+  },
+  {
+   "level": 16,
+   "attackMultiplier": 1.23638,
+   "intervalMultiplier": 0.933972,
+   "isBreakthrough": false,
+   "goldToNext": 8440,
+   "medalToNext": 0
+  },
+  {
+   "level": 17,
+   "attackMultiplier": 1.253994,
+   "intervalMultiplier": 0.929728,
+   "isBreakthrough": false,
+   "goldToNext": 9310,
+   "medalToNext": 0
+  },
+  {
+   "level": 18,
+   "attackMultiplier": 1.271859,
+   "intervalMultiplier": 0.925504,
+   "isBreakthrough": false,
+   "goldToNext": 10200,
+   "medalToNext": 0
+  },
+  {
+   "level": 19,
+   "attackMultiplier": 1.289978,
+   "intervalMultiplier": 0.921299,
+   "isBreakthrough": false,
+   "goldToNext": 11120,
+   "medalToNext": 0
+  },
+  {
+   "level": 20,
+   "attackMultiplier": 1.308356,
+   "intervalMultiplier": 0.917113,
+   "isBreakthrough": true,
+   "goldToNext": 12070,
+   "medalToNext": 20
+  },
+  {
+   "level": 21,
+   "attackMultiplier": 1.326995,
+   "intervalMultiplier": 0.912946,
+   "isBreakthrough": false,
+   "goldToNext": 13050,
+   "medalToNext": 0
+  },
+  {
+   "level": 22,
+   "attackMultiplier": 1.3459,
+   "intervalMultiplier": 0.908798,
+   "isBreakthrough": false,
+   "goldToNext": 14060,
+   "medalToNext": 0
+  },
+  {
+   "level": 23,
+   "attackMultiplier": 1.365074,
+   "intervalMultiplier": 0.904668,
+   "isBreakthrough": false,
+   "goldToNext": 15090,
+   "medalToNext": 0
+  },
+  {
+   "level": 24,
+   "attackMultiplier": 1.384522,
+   "intervalMultiplier": 0.900558,
+   "isBreakthrough": false,
+   "goldToNext": 16160,
+   "medalToNext": 0
+  },
+  {
+   "level": 25,
+   "attackMultiplier": 1.404246,
+   "intervalMultiplier": 0.896466,
+   "isBreakthrough": false,
+   "goldToNext": 17250,
+   "medalToNext": 0
+  },
+  {
+   "level": 26,
+   "attackMultiplier": 1.424252,
+   "intervalMultiplier": 0.892393,
+   "isBreakthrough": false,
+   "goldToNext": 18360,
+   "medalToNext": 0
+  },
+  {
+   "level": 27,
+   "attackMultiplier": 1.444542,
+   "intervalMultiplier": 0.888338,
+   "isBreakthrough": false,
+   "goldToNext": 19510,
+   "medalToNext": 0
+  },
+  {
+   "level": 28,
+   "attackMultiplier": 1.465122,
+   "intervalMultiplier": 0.884302,
+   "isBreakthrough": false,
+   "goldToNext": 20680,
+   "medalToNext": 0
+  },
+  {
+   "level": 29,
+   "attackMultiplier": 1.485994,
+   "intervalMultiplier": 0.880284,
+   "isBreakthrough": false,
+   "goldToNext": 21870,
+   "medalToNext": 0
+  },
+  {
+   "level": 30,
+   "attackMultiplier": 1.507164,
+   "intervalMultiplier": 0.876284,
+   "isBreakthrough": true,
+   "goldToNext": 23090,
+   "medalToNext": 40
+  },
+  {
+   "level": 31,
+   "attackMultiplier": 1.528636,
+   "intervalMultiplier": 0.872303,
+   "isBreakthrough": false,
+   "goldToNext": 24330,
+   "medalToNext": 0
+  },
+  {
+   "level": 32,
+   "attackMultiplier": 1.550414,
+   "intervalMultiplier": 0.86834,
+   "isBreakthrough": false,
+   "goldToNext": 25600,
+   "medalToNext": 0
+  },
+  {
+   "level": 33,
+   "attackMultiplier": 1.572501,
+   "intervalMultiplier": 0.864394,
+   "isBreakthrough": false,
+   "goldToNext": 26890,
+   "medalToNext": 0
+  },
+  {
+   "level": 34,
+   "attackMultiplier": 1.594904,
+   "intervalMultiplier": 0.860467,
+   "isBreakthrough": false,
+   "goldToNext": 28210,
+   "medalToNext": 0
+  },
+  {
+   "level": 35,
+   "attackMultiplier": 1.617625,
+   "intervalMultiplier": 0.856557,
+   "isBreakthrough": false,
+   "goldToNext": 29550,
+   "medalToNext": 0
+  },
+  {
+   "level": 36,
+   "attackMultiplier": 1.640671,
+   "intervalMultiplier": 0.852665,
+   "isBreakthrough": false,
+   "goldToNext": 30910,
+   "medalToNext": 0
+  },
+  {
+   "level": 37,
+   "attackMultiplier": 1.664044,
+   "intervalMultiplier": 0.848791,
+   "isBreakthrough": false,
+   "goldToNext": 32290,
+   "medalToNext": 0
+  },
+  {
+   "level": 38,
+   "attackMultiplier": 1.687751,
+   "intervalMultiplier": 0.844935,
+   "isBreakthrough": false,
+   "goldToNext": 33700,
+   "medalToNext": 0
+  },
+  {
+   "level": 39,
+   "attackMultiplier": 1.711795,
+   "intervalMultiplier": 0.841095,
+   "isBreakthrough": false,
+   "goldToNext": 35130,
+   "medalToNext": 0
+  },
+  {
+   "level": 40,
+   "attackMultiplier": 1.736182,
+   "intervalMultiplier": 0.837274,
+   "isBreakthrough": true,
+   "goldToNext": 36580,
+   "medalToNext": 80
+  },
+  {
+   "level": 41,
+   "attackMultiplier": 1.760917,
+   "intervalMultiplier": 0.83347,
+   "isBreakthrough": false,
+   "goldToNext": 38060,
+   "medalToNext": 0
+  },
+  {
+   "level": 42,
+   "attackMultiplier": 1.786003,
+   "intervalMultiplier": 0.829683,
+   "isBreakthrough": false,
+   "goldToNext": 39550,
+   "medalToNext": 0
+  },
+  {
+   "level": 43,
+   "attackMultiplier": 1.811447,
+   "intervalMultiplier": 0.825913,
+   "isBreakthrough": false,
+   "goldToNext": 41070,
+   "medalToNext": 0
+  },
+  {
+   "level": 44,
+   "attackMultiplier": 1.837254,
+   "intervalMultiplier": 0.82216,
+   "isBreakthrough": false,
+   "goldToNext": 42610,
+   "medalToNext": 0
+  },
+  {
+   "level": 45,
+   "attackMultiplier": 1.863428,
+   "intervalMultiplier": 0.818425,
+   "isBreakthrough": false,
+   "goldToNext": 44170,
+   "medalToNext": 0
+  },
+  {
+   "level": 46,
+   "attackMultiplier": 1.889975,
+   "intervalMultiplier": 0.814706,
+   "isBreakthrough": false,
+   "goldToNext": 45750,
+   "medalToNext": 0
+  },
+  {
+   "level": 47,
+   "attackMultiplier": 1.916901,
+   "intervalMultiplier": 0.811004,
+   "isBreakthrough": false,
+   "goldToNext": 47350,
+   "medalToNext": 0
+  },
+  {
+   "level": 48,
+   "attackMultiplier": 1.944209,
+   "intervalMultiplier": 0.80732,
+   "isBreakthrough": false,
+   "goldToNext": 48980,
+   "medalToNext": 0
+  },
+  {
+   "level": 49,
+   "attackMultiplier": 1.971907,
+   "intervalMultiplier": 0.803651,
+   "isBreakthrough": false,
+   "goldToNext": 50620,
+   "medalToNext": 0
+  },
+  {
+   "level": 50,
+   "attackMultiplier": 2.0,
+   "intervalMultiplier": 0.8,
+   "isBreakthrough": false,
+   "goldToNext": 0,
+   "medalToNext": 0
+  }
+ ]
+}

@@ -41,6 +41,7 @@ namespace TowerDefense.Monsters
         private MonsterDataSO _data;
         private Transform[] _waypoints;
         private MonsterSpawner _spawner;
+        private float _cellSize = 1f; // moveSpeed(칸/초) → 월드 단위 환산용
         private float _actualMaxHp; // 스폰 당시 풀피 - 죽을 때 상대 보드로 넘길 "풀피" 값으로 재사용
         private bool _isTransferred; // true면 이미 상대 쪽에서 넘어온 개체 - 죽어도 재전송 안 함
 
@@ -64,6 +65,12 @@ namespace TowerDefense.Monsters
         private SpriteRenderer _spriteRenderer;
         private Color _baseColor;
         private Coroutine _hitFlashRoutine;
+
+        // [전용 아트 적용 - 2026-10-04] SpriteFrameAnimator(프레임 애니메이션)가 붙은 프리팹은 실제
+        // 아트를 쓰는 중이라, 임시 타입 색 틴트를 입히면 아트 색이 망가지므로 틴트를 흰색(=원본색)으로
+        // 고정함. 흰색 원본 위에선 "흰색 플래시"가 안 보이므로 히트 플래시도 붉은 계열로 바꿈.
+        private bool _hasArt;
+        private static readonly Color ArtHitFlashColor = new Color(1f, 0.35f, 0.35f, 1f);
 
         // [임시 시각 구분 - 2026-09-29] 몬스터 종류가 병사/기마병사/방패병사/보스 9종 다 합쳐도
         // 전용 아트가 없어서 지금은 Monster_Placeholder.prefab 하나(공용 스프라이트)를 그대로
@@ -92,6 +99,18 @@ namespace TowerDefense.Monsters
         public MonsterSpawner Spawner => _spawner;
         public float CurrentHp => _currentHp;
 
+        /// <summary>경로 진행도 - 클수록 기지에 가까움(타워 우선순위 "맨 앞" 판정용). 웨이포인트 인덱스가 주, 다음
+        /// 웨이포인트까지 남은 거리가 부(가까울수록 큼). 매 호출 할당 없음.</summary>
+        public float PathProgress
+        {
+            get
+            {
+                if (_waypoints == null || _waypointIndex >= _waypoints.Length) return _waypointIndex * 1000f;
+                Vector3 d = _waypoints[_waypointIndex].position - transform.position;
+                return _waypointIndex * 1000f - Mathf.Sqrt(d.x * d.x + d.y * d.y);
+            }
+        }
+
         // 오브젝트 풀링 특성상 SetActive(false/true)로 반납/재사용되므로, 등록/해제도 OnEnable/OnDisable에
         // 맡기면 Init 호출 누락이나 반납 시 해제 누락 걱정 없이 항상 활성 상태와 레지스트리가 일치함
         // (타워(TowerUnit)가 이 레지스트리로 타겟을 찾음 - MonsterRegistry 참고). 클라이언트 쪽
@@ -102,6 +121,7 @@ namespace TowerDefense.Monsters
             // 매번 GetComponent를 부르는 것보다 가벼움. _baseColor는 일단 프리팹 기본색으로
             // 채워두고, 실제 타입 색은 Init()에서 _typeTintColor를 통해 갱신됨(ApplyTypeTint 참고).
             _spriteRenderer = GetComponent<SpriteRenderer>();
+            _hasArt = GetComponent<SpriteFrameAnimator>() != null;
             if (_spriteRenderer != null) _baseColor = _spriteRenderer.color;
 
             // 구독은 반드시 여기(Awake, 이 오브젝트 생애 전체에 딱 한 번만 실행됨)에서만 함 -
@@ -118,6 +138,7 @@ namespace TowerDefense.Monsters
         // 재사용됐을 때 히트 플래시가 끝나고 "이전 타입 색"이 아니라 "지금 타입 색"으로 돌아옴.
         private void ApplyTypeTint(Color color)
         {
+            if (_hasArt) color = Color.white; // 전용 아트는 원본 색 유지(_hasArt 주석 참고)
             _baseColor = color;
             if (_spriteRenderer != null) _spriteRenderer.color = color;
         }
@@ -150,7 +171,7 @@ namespace TowerDefense.Monsters
         // 호출부(자기 웨이브 정상 스폰)는 그대로 둬도 됨.
         // weather: 스폰되는 시점의 웨이브 날씨(MonsterSpawner._currentWeather) - 기본값 Clear라
         // 기존 디버그 전용 SpawnMonster(data) 오버로드 호출부도 그대로 컴파일됨.
-        public void Init(MonsterDataSO data, float actualMaxHp, Transform[] waypoints, MonsterSpawner spawner, bool isTransferred = false, WeatherType weather = WeatherType.Clear)
+        public void Init(MonsterDataSO data, float actualMaxHp, Transform[] waypoints, MonsterSpawner spawner, bool isTransferred = false, WeatherType weather = WeatherType.Clear, float cellSize = 1f)
         {
             _data = data;
             _waypoints = waypoints;
@@ -159,6 +180,7 @@ namespace TowerDefense.Monsters
             _currentHp = actualMaxHp;
             _actualMaxHp = actualMaxHp;
             _isTransferred = isTransferred;
+            _cellSize = cellSize > 0f ? cellSize : 1f;
 
             // Init은 MonsterSpawner의 IsServer 가드 안에서만 호출되므로 사실상 항상 서버지만,
             // NetworkVariable 쓰기 권한 문서화 차원에서 방어적으로 한 번 더 확인함. 이 한 줄이
@@ -204,7 +226,8 @@ namespace TowerDefense.Monsters
             // 배율이 계산에서 빠져있었음(MonsterDataSO에 필드만 추가되고 실제 이동 계산엔 안 쓰임).
             // 날씨 이동속도 배율(WeatherEffectTable.MoveSpeedMultiplier)도 함께 곱함 - 눈 날씨 15% 증가.
             Vector3 target = _waypoints[_waypointIndex].position;
-            float speed = _data.moveSpeed * _data.moveSpeedMultiplier * WeatherEffectTable.MoveSpeedMultiplier(_spawnWeather);
+            // moveSpeed는 "칸/초" 단위(엑셀 속도값 ÷ 10) - 월드 속도 = 칸/초 × 칸 크기.
+            float speed = _data.moveSpeed * _data.moveSpeedMultiplier * _cellSize * WeatherEffectTable.MoveSpeedMultiplier(_spawnWeather);
             transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
 
             if (Vector3.Distance(transform.position, target) < 0.05f)
@@ -278,8 +301,6 @@ namespace TowerDefense.Monsters
         [Rpc(SendTo.ClientsAndHost)]
         public void PlayHitFlashRpc()
         {
-            // [임시 진단 - 원인 파악용, 나중에 제거할 것]
-            Debug.Log($"[MonsterPathFollower][진단] PlayHitFlashRpc 수신됨 - spriteRenderer={(_spriteRenderer != null ? "있음" : "NULL")}");
             if (_spriteRenderer == null) return;
             if (_hitFlashRoutine != null) StopCoroutine(_hitFlashRoutine);
             _hitFlashRoutine = StartCoroutine(HitFlashCoroutine());
@@ -287,7 +308,7 @@ namespace TowerDefense.Monsters
 
         private IEnumerator HitFlashCoroutine()
         {
-            _spriteRenderer.color = Color.white;
+            _spriteRenderer.color = _hasArt ? ArtHitFlashColor : Color.white;
             yield return new WaitForSeconds(0.08f);
             if (_spriteRenderer != null) _spriteRenderer.color = _baseColor;
             _hitFlashRoutine = null;
@@ -295,6 +316,8 @@ namespace TowerDefense.Monsters
 
         private void Die()
         {
+            _spawner.NotifyMonsterKilled(_data); // 처치 SP 지급(이 몬스터가 속한 보드의 지갑으로)
+
             // TODO(경제 시스템): 예전엔 여기서 EconomyManager.Instance.AddGold(_data.goldReward)를
             // 호출했었는데, 이 메서드가 서버에서만 실행되는 구조로 바뀌면서 그대로 두면 "호스트를
             // 맡은 플레이어의 로컬 EconomyManager"만 양쪽 보드 킬 보상을 전부 받아가는 버그가 생김

@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_3002
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 3002
+  characterId: char_3002
+  displayName: "\uC720\uD558\uB9B0"
+  faction: "\uD48D\uB958\uB2E8"
+  description: 
+  weapon: "\uAC70\uC6B8"
+  attackType: 1
+  isSupport: 1
+  mergeType: 0
+  targetPriority: 0
+  baseDamage: 95
+  attackInterval: 1.4
+  range: 5
+  starAttackPower: 36
+  starAttackInterval: 0
+  gaugePerHit: 0
+  killType: 0
+  gaugePerKill: 10
+  ultimateGauge: 630
+  skill:
+    name: "\uBD88\uC644\uC804 \uBCF4\uD638"
+    description: "n\uCD08\uB9C8\uB2E4 \uB79C\uB364\uD55C \uC544\uAD70 1\uBA85\uC5D0\uAC8C
+      \uBCF4\uD638\uB9C9 \uBD80\uC5EC (\uC911\uCCA9 X). \uBCF4\uD638\uB9C9\uC740
+      \uBCF4\uC2A4\xB7\uC0C1\uB300 \uC2A4\uD0AC \uD6A8\uACFC(\uC6B4\uC11D, \uC0AC\uC2AC,
+      \uC870\uC791, \uC554\uC0B4 \uB4F1)\uB97C 1\uD68C \uBB34\uD6A8\uD654\uD569\uB2C8\uB2E4.
+      \uBCF8\uC778\uC740 \uC18C\uD658 \uC2DC \uBCF4\uD638\uB9C9\uC774 \uBD80\uC5EC\uB429\uB2C8\uB2E4.
+      \uBCF8\uC778\uC740 \uACF5\uACA9\uD558\uC9C0 \uBABB\uD558\uB294 \uBC84\uD504\uD615
+      \uCE90\uB9AD\uD130 \uC785\uB2C8\uB2E4."
+    parameters:
+    - key: shieldIntervalSeconds
+      meaning: "n\uCD08\uB9C8\uB2E4 \uC544\uAD70 1\uBA85 \uBCF4\uD638\uB9C9 (\uC9E7\uC744\uC218\uB85D
+        \uC88B\uC74C)"
+      values:
+      - 120
+      - 110
+      - 100
+      - 85
+      - 60
+  ultimate:
+    name: "\uC791\uC740 \uBCC4"
+    description: "\uB79C\uB364\uD55C \uC0C1\uB300 \uCE90\uB9AD\uD130 2\uBA85\uC5D0\uAC8C
+      \uBCC4\uB625\uBCC4\uC744 \uB5A8\uC5B4\uD2B8\uB9BD\uB2C8\uB2E4. \uB9DE\uC740
+      \uCE90\uB9AD\uD130\uB294 (n\uCD08 \uB3D9\uC548) \uC8FC\uB294 \uD53C\uD574\uAC00
+      \uBAAC\uC2A4\uD130 \uD68C\uBCF5\uC73C\uB85C \uC804\uD658\uB429\uB2C8\uB2E4."
+    parameters:
+    - key: healConvertSeconds
+      meaning: "\uC0C1\uB300 2\uBA85(\uACE0\uC815) \uC8FC\uB294 \uD53C\uD574 \u2192
+        \uBAAC\uC2A4\uD130 \uD68C\uBCF5 \uC804\uD658 n\uCD08"
+      values:
+      - 12
+      - 12.5
+      - 13
+      - 14
+      - 15
+  isStarter: 0
+  unlockCost: 100
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

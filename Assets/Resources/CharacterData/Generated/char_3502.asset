@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_3502
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 3502
+  characterId: char_3502
+  displayName: "\uCC9C\uD76C\uC7AC"
+  faction: "\uD654\uB791\uD68C"
+  description: 
+  weapon: "\uAC70\uBB38\uACE0"
+  attackType: 0
+  isSupport: 1
+  mergeType: 0
+  targetPriority: 0
+  baseDamage: 109
+  attackInterval: 1.3
+  range: 2
+  starAttackPower: 41
+  starAttackInterval: 0
+  gaugePerHit: 0
+  killType: 0
+  gaugePerKill: 10
+  ultimateGauge: 500
+  skill:
+    name: "\uC218\uC785"
+    description: "(30\uCD08\uB9C8\uB2E4 10\uCD08 \uB3D9\uC548) SP \uC218\uC785\uC774
+      n% \uC99D\uAC00\uD569\uB2C8\uB2E4. \uBCF8\uC778\uC740 \uACF5\uACA9\uD558\uC9C0
+      \uBABB\uD558\uB294 \uBC84\uD504\uD615 \uCE90\uB9AD\uD130\uC785\uB2C8\uB2E4."
+    parameters:
+    - key: spIncomeBonusPercent
+      meaning: "30\uCD08\uB9C8\uB2E4 10\uCD08\uAC04 SP \uC218\uC785 n% \uC99D\uAC00"
+      values:
+      - 10
+      - 12
+      - 15
+      - 19
+      - 25
+  ultimate:
+    name: "\uC0AC\uAE30 \uC99D\uAC00"
+    description: "(9\uCD08 \uB3D9\uC548) \uC544\uAD70 \uBAA8\uB4E0 \uADFC\uC811 \uCE90\uB9AD\uD130\uC758
+      \uACF5\uACA9\uB825\uC774 n% \uC99D\uAC00\uD558\uACE0, \uC0AC\uAC70\uB9AC\uAC00
+      +1 \uC99D\uAC00\uD569\uB2C8\uB2E4."
+    parameters:
+    - key: meleeAttackBonusPercent
+      meaning: "9\uCD08 \uB3D9\uC548 \uC544\uAD70 \uADFC\uC811 \uACF5\uACA9\uB825
+        n% + \uC0AC\uAC70\uB9AC 1"
+      values:
+      - 12
+      - 14
+      - 16
+      - 20
+      - 25
+  isStarter: 0
+  unlockCost: 100
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

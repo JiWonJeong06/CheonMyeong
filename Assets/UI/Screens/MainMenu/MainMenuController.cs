@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UIElements;
+using TowerDefense.Data;
 using TowerDefense.Economy;
 using TowerDefense.Network;
 
@@ -28,6 +29,8 @@ namespace TowerDefense.UI
         private Button _techTreeButton;
         private Button _shopButton;
         private Button _inventoryButton;
+        private Button _boardButton;
+        private VisualElement _deckSlots;
 
         // UIDocument는 같은 오브젝트에 있으니 OnEnable에서 참조해도 안전함
         // (컴포넌트 추가 순서상 UIDocument가 이 스크립트보다 위에 있으면 이 스크립트 OnEnable 시점엔 이미 준비돼 있음).
@@ -43,12 +46,18 @@ namespace TowerDefense.UI
             _techTreeButton = root.Q<Button>("techtree-button");
             _shopButton = root.Q<Button>("shop-button");
             _inventoryButton = root.Q<Button>("inventory-button");
+            _boardButton = root.Q<Button>("board-button");
+            _deckSlots = root.Q<VisualElement>("deck-slots");
 
             _playButton.clicked += OnPlayClicked;
             _settingsButton.clicked += OnSettingsClicked;
             _techTreeButton.clicked += OnTechTreeClicked;
             _shopButton.clicked += OnShopClicked;
             _inventoryButton.clicked += OnInventoryClicked;
+            if (_boardButton != null) _boardButton.clicked += OnBoardClicked;
+
+            BuildDeckSlots();
+            SubscribeDeck();
         }
 
         // EconomyManager는 "다른 오브젝트"의 싱글턴이라 OnEnable이 아니라 Start에서 참조해야 안전함.
@@ -56,6 +65,10 @@ namespace TowerDefense.UI
         // OnEnable은 오브젝트마다 자기 Awake 직후 바로 실행돼서 다른 오브젝트가 아직 준비 안 됐을 수 있음.
         private void Start()
         {
+            // DeckManager는 다른 오브젝트의 싱글턴이라 OnEnable 시점엔 없을 수 있음 - 여기서 한 번 더 구독 시도.
+            SubscribeDeck();
+            RefreshDeckSlots();
+
             if (EconomyManager.Instance == null)
             {
                 Debug.LogWarning("[MainMenu] EconomyManager를 찾을 수 없음 - 씬에 배치했는지 확인해줘.");
@@ -75,6 +88,10 @@ namespace TowerDefense.UI
             _techTreeButton.clicked -= OnTechTreeClicked;
             _shopButton.clicked -= OnShopClicked;
             _inventoryButton.clicked -= OnInventoryClicked;
+            if (_boardButton != null) _boardButton.clicked -= OnBoardClicked;
+
+            if (DeckManager.Instance != null)
+                DeckManager.Instance.OnDeckChanged -= RefreshDeckSlots;
 
             if (EconomyManager.Instance != null)
             {
@@ -112,5 +129,66 @@ namespace TowerDefense.UI
         private void OnShopClicked() => shopPopup.Open();
 
         private void OnInventoryClicked() => inventoryPopup.Open();
+
+        private void OnBoardClicked() =>
+            Debug.Log("[MainMenu] 게시판 버튼 - 게시판 기능 미구현, 더미 로그만 찍음");
+
+        // ── 덱 캐릭터 슬롯 ──────────────────────────────────────────────
+        // 슬롯 VisualElement는 OnEnable에서 DeckSize개를 한 번만 만들고, 이후엔 내용(아이콘/이름)만 갱신함.
+        // (갱신 때마다 Clear/재생성하지 않아서 GC 할당이 없음.)
+        private void BuildDeckSlots()
+        {
+            if (_deckSlots == null) return;
+            _deckSlots.Clear();
+            for (int i = 0; i < DeckManager.DeckSize; i++)
+            {
+                var slot = new VisualElement();
+                slot.AddToClassList("deck-slot");
+                slot.AddToClassList("deck-slot--empty");
+                slot.pickingMode = PickingMode.Ignore; // 표시 전용 - 편성은 '덱 설정' 팝업에서 함
+                var nameLabel = new Label();
+                nameLabel.AddToClassList("deck-slot-name");
+                nameLabel.pickingMode = PickingMode.Ignore;
+                slot.Add(nameLabel);
+                _deckSlots.Add(slot);
+            }
+        }
+
+        // OnEnable/Start 양쪽에서 불려도 중복 구독이 안 되게 -= 먼저 한 뒤 +=.
+        private void SubscribeDeck()
+        {
+            if (DeckManager.Instance == null) return;
+            DeckManager.Instance.OnDeckChanged -= RefreshDeckSlots;
+            DeckManager.Instance.OnDeckChanged += RefreshDeckSlots;
+        }
+
+        // 마지막으로 '편성 저장'된 덱(GetActiveDeck)을 보여줌 - 편집 중인 임시본(GetDraftDeck)이 아님.
+        private void RefreshDeckSlots()
+        {
+            if (_deckSlots == null) return;
+            var deck = DeckManager.Instance != null ? DeckManager.Instance.GetActiveDeck() : null;
+
+            for (int i = 0; i < _deckSlots.childCount; i++)
+            {
+                var slot = _deckSlots[i];
+                var nameLabel = (Label)slot[0];
+                string id = (deck != null && i < deck.Count) ? deck[i] : null;
+                var data = string.IsNullOrEmpty(id) ? null : CharacterDatabase.GetById(id);
+
+                slot.EnableInClassList("deck-slot--empty", data == null);
+
+                if (data != null && data.iconSprite != null)
+                {
+                    slot.style.backgroundImage = new StyleBackground(data.iconSprite);
+                    nameLabel.text = string.Empty;
+                }
+                else
+                {
+                    // 아이콘 미배정 캐릭터는 이름 텍스트로 대체 (아이콘 배정되면 자동으로 이미지로 바뀜)
+                    slot.style.backgroundImage = StyleKeyword.Null;
+                    nameLabel.text = data != null ? data.displayName : string.Empty;
+                }
+            }
+        }
     }
 }

@@ -50,12 +50,14 @@ namespace TowerDefense.Monsters
                   "isBoss=true인 MonsterDataSO만 넣을 것. (보스전 자체는 아직 미구현)")]
         public List<MonsterDataSO> bossPool = new();
 
-        [Tooltip("이 웨이브의 병사(기본형 몬스터) 기준 체력 - 표본: 1웨이브 100 / 5웨이브 250 / " +
+        [Tooltip("[사용 안 함] 체력은 MonsterSpawner.SoldierHpAt(연속 성장 공식)이 계산함. 이전 표 값 보관용. " +
+                  "이 웨이브의 병사(기본형 몬스터) 기준 체력 - 표본: 1웨이브 100 / 5웨이브 250 / " +
                   "10웨이브 510 / 15웨이브 880 / 20웨이브 1,310. 나머지 웨이브 값은 기획 쪽에서 " +
                   "보간해서 채울 것.")]
         public float soldierBaselineHp = 100f;
 
-        [Tooltip("이 웨이브 보스의 기본 체력(잔여 몬스터 체력 합산 전 값) - 표본: 1웨이브 8,600 / " +
+        [Tooltip("[사용 안 함] 보스 체력은 MonsterSpawner가 병사 체력 × 85 × 보스 배율 + 잔여 체력으로 계산함. " +
+                  "이 웨이브 보스의 기본 체력(잔여 몬스터 체력 합산 전 값) - 표본: 1웨이브 8,600 / " +
                   "5웨이브 21,200 / 10웨이브 43,100 / 15웨이브 74,200 / 20웨이브 110,300.")]
         public float bossBaselineHp = 8600f;
     }

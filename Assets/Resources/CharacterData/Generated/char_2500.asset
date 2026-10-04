@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_2500
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 2500
+  characterId: char_2500
+  displayName: "\uBC15\uC131\uD6C8"
+  faction: "\uC9C0\uD558\uBB38"
+  description: 
+  weapon: "\uCCA0\uD1F4"
+  attackType: 0
+  isSupport: 0
+  mergeType: 1
+  targetPriority: 0
+  baseDamage: 161
+  attackInterval: 1.4
+  range: 1
+  starAttackPower: 29
+  starAttackInterval: -0.107
+  gaugePerHit: 21
+  killType: 0
+  gaugePerKill: 10
+  ultimateGauge: 650
+  skill:
+    name: "\uAE30\uC808 \uAC15\uD0C0"
+    description: "n% \uD655\uB960\uB85C \uAE30\uBCF8 \uACF5\uACA9\uC774 1.75\uCD08
+      \uB3D9\uC548 \uAE30\uC808\uC774 \uBD80\uC5EC \uB429\uB2C8\uB2E4."
+    parameters:
+    - key: stunChancePercent
+      meaning: "\uAE30\uBCF8 \uACF5\uACA9 n% \uD655\uB960\uB85C 1.75\uCD08 \uAE30\uC808"
+      values:
+      - 5
+      - 6
+      - 7
+      - 9
+      - 12
+  ultimate:
+    name: "\uC8FC\uC791\uC758 \uCDA4"
+    description: "\uB9F5\uC744 \uAC00\uB85C\uC9C0\uB974\uB294 \uC8FC\uC791\uC744
+      \uC18C\uD658, \uACF5\uACA9\uB825\uC758 n% \uD53C\uD574\uB97C \uC785\uD78C\uB2E4.
+      \uD654\uC0C1\uC774 \uBD80\uC5EC \uB429\uB2C8\uB2E4. [\uD654\uC0C1: 3\uCD08
+      \uB3D9\uC548 \uCD08\uB2F9 \uBAAC\uC2A4\uD130 \uCD5C\uB300 \uCCB4\uB825\uC758
+      3% \uAC10\uC18C. \uBCF4\uC2A4\uB294 \uD654\uC0C1 \uBA74\uC5ED]"
+    parameters:
+    - key: phoenixDamagePercent
+      meaning: "\uC8FC\uC791 \uACF5\uACA9\uB825 n% + \uD654\uC0C1 (\uBCF4\uC2A4 \uBA74\uC5ED)"
+      values:
+      - 150
+      - 170
+      - 195
+      - 240
+      - 300
+  isStarter: 1
+  unlockCost: 0
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

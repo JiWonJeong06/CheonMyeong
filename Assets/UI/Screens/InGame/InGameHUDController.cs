@@ -197,8 +197,8 @@ namespace TowerDefense.UI
 
             _myHpHandler = (_, hp) => UpdateBar(_myHpFill, _myHpText, hp, _myBoard.Health.MaxHp);
             _enemyHpHandler = (_, hp) => UpdateBar(_enemyHpFill, _enemyHpText, hp, _enemyBoard.Health.MaxHp);
-            _mySpHandler = (_, sp) => UpdateBar(_mySpFill, _mySpText, sp, _myBoard.Resources.MaxSP);
-            _enemySpHandler = (_, sp) => UpdateBar(_enemySpFill, _enemySpText, sp, _enemyBoard.Resources.MaxSP);
+            _mySpHandler = (_, sp) => UpdateSp(_mySpFill, _mySpText, sp);
+            _enemySpHandler = (_, sp) => UpdateSp(_enemySpFill, _enemySpText, sp);
 
             _boundMyHpVar.OnValueChanged += _myHpHandler;
             _boundEnemyHpVar.OnValueChanged += _enemyHpHandler;
@@ -209,8 +209,8 @@ namespace TowerDefense.UI
             // 최초 1회는 지금 값으로 직접 반영해줘야 HUD가 빈 채로 시작하지 않음.
             UpdateBar(_myHpFill, _myHpText, _boundMyHpVar.Value, _myBoard.Health.MaxHp);
             UpdateBar(_enemyHpFill, _enemyHpText, _boundEnemyHpVar.Value, _enemyBoard.Health.MaxHp);
-            UpdateBar(_mySpFill, _mySpText, _boundMySpVar.Value, _myBoard.Resources.MaxSP);
-            UpdateBar(_enemySpFill, _enemySpText, _boundEnemySpVar.Value, _enemyBoard.Resources.MaxSP);
+            UpdateSp(_mySpFill, _mySpText, _boundMySpVar.Value);
+            UpdateSp(_enemySpFill, _enemySpText, _boundEnemySpVar.Value);
 
             // 계절/날씨 표시 - 계절(SelectedSeason)은 매치 시작 시 1회만 정해지고 안 바뀌지만,
             // 날씨(CurrentWeather)는 웨이브마다 바뀌므로 그 값이 바뀔 때마다 라벨을 갱신함.
@@ -303,6 +303,13 @@ namespace TowerDefense.UI
             yield return new WaitForSeconds(Mathf.Max(0f, durationSeconds - 0.4f));
             _visionBlockOverlay.style.opacity = 0f; // 페이드 아웃
             _visionBlockRoutine = null;
+        }
+
+        // SP는 상한이 없는 누적 지갑이라 게이지 대신 숫자만 보여줌(채움 막대는 숨김).
+        private static void UpdateSp(VisualElement fill, Label text, float current)
+        {
+            if (fill != null) fill.style.display = DisplayStyle.None;
+            text.text = Mathf.RoundToInt(current).ToString();
         }
 
         private static void UpdateBar(VisualElement fill, Label text, float current, float max)

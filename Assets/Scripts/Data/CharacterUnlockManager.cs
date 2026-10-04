@@ -37,7 +37,13 @@ namespace TowerDefense.Data
             Load();
         }
 
-        public bool IsUnlocked(string characterId) => _unlockedIds.Contains(characterId);
+        // 시작 캐릭터(CharacterDataSO.isStarter)는 저장된 해금 목록과 상관없이 항상 보유 상태.
+        public bool IsUnlocked(string characterId)
+        {
+            if (_unlockedIds.Contains(characterId)) return true;
+            var data = CharacterDatabase.GetById(characterId);
+            return data != null && data.isStarter;
+        }
 
         /// <summary>
         /// 재화를 소모해서 캐릭터를 해금 시도함. 이미 해금된 캐릭터거나 재화가 부족하면 false.

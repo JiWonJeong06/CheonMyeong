@@ -49,6 +49,8 @@ namespace TowerDefense.EditorTools
     {
         private const string DataFolder = "Assets/Data/Monsters";
         private const string PlaceholderPrefabPath = "Assets/Prefabs/Monster_Placeholder.prefab";
+        // 더미 Monster_Placeholder가 삭제된 뒤의 대체 - 아직 전용 아트가 없는 보스는 병사 아트 프리팹을 임시로 씀.
+        private const string FallbackPrefabPath = "Assets/Prefabs/Monster_Soldier.prefab";
         private const string InGameScenePath = "Assets/Scenes/InGame.unity";
         private const string TaegeukBoardRootName = "TaegeukBoard"; // TaegeukBoardScaffoldTool.cs와 동일한 이름
         private const string P1RouteName = "P1MonsterRoute"; // TaegeukBoardScaffoldTool.cs가 만든 MonsterSpawner가 붙은 오브젝트
@@ -64,20 +66,22 @@ namespace TowerDefense.EditorTools
             public string monsterId;
             public string displayName;
             public float hpMultiplier;
-            public float moveSpeedMultiplier;
+            public float moveSpeed; // 칸/초 (엑셀 속도값 ÷ 10)
             public float spawnWeight;
+            public float killSp;        // 1웨이브 처치 SP
+            public float killSpPerWave; // 웨이브당 증가(+40% = killSp × 0.4)
         }
 
         private static readonly NormalMonsterSpec[] NormalMonsters =
         {
-            new NormalMonsterSpec { assetName = "Monster_Soldier", monsterId = "soldier", displayName = "병사", hpMultiplier = 1f, moveSpeedMultiplier = 1f, spawnWeight = 70f },
-            new NormalMonsterSpec { assetName = "Monster_Cavalry", monsterId = "cavalry", displayName = "기마 병사", hpMultiplier = 0.5f, moveSpeedMultiplier = 1.6f, spawnWeight = 20f },
-            new NormalMonsterSpec { assetName = "Monster_Shield", monsterId = "shield", displayName = "방패 병사", hpMultiplier = 5f, moveSpeedMultiplier = 0.6f, spawnWeight = 10f },
+            new NormalMonsterSpec { assetName = "Monster_Soldier", monsterId = "soldier", displayName = "병사", hpMultiplier = 1f, moveSpeed = 0.5f, spawnWeight = 70f, killSp = 15f, killSpPerWave = 6f },
+            new NormalMonsterSpec { assetName = "Monster_Cavalry", monsterId = "cavalry", displayName = "기마 병사", hpMultiplier = 0.5f, moveSpeed = 0.8f, spawnWeight = 20f, killSp = 9f, killSpPerWave = 3.6f },
+            new NormalMonsterSpec { assetName = "Monster_Shield", monsterId = "shield", displayName = "방패 병사", hpMultiplier = 5f, moveSpeed = 0.3f, spawnWeight = 10f, killSp = 45f, killSpPerWave = 18f },
         };
 
         // 보스 9종 - 천명.pptx 슬라이드 18(ENEMIES) 원문 그대로(이름/기믹 이름/기믹 설명).
-        // hpMultiplier는 전부 1(기획서에 보스별 배율 언급 없음 - "웨이브 보스 기본 체력"을
-        // 그대로 씀), moveSpeed/moveSpeedMultiplier도 보스별 수치가 없어서 기본값 그대로 둠.
+        // 엑셀(천명_통합) 몬스터 시트 기준: hpMultiplier = 보스 체력 배율(병사 체력 × 85에 곱함),
+        // moveSpeed = 칸/초(시트 속도값 ÷ 10, 홍치달만 8 → 0.8).
         private struct BossSpec
         {
             public string assetName;
@@ -85,19 +89,21 @@ namespace TowerDefense.EditorTools
             public string displayName;
             public string abilityName;
             public string abilityDescription;
+            public float hpMultiplier;
+            public float moveSpeed;
         }
 
         private static readonly BossSpec[] Bosses =
         {
-            new BossSpec { assetName = "Boss_ChoiMinYeong", monsterId = "boss_choi_min_yeong", displayName = "최민영", abilityName = "소환술", abilityDescription = "몬스터 5마리 소환" },
-            new BossSpec { assetName = "Boss_HongChiDal", monsterId = "boss_hong_chi_dal", displayName = "홍치달", abilityName = "빠른 이속", abilityDescription = "스킬 사용 시 이동속도 증가" },
-            new BossSpec { assetName = "Boss_BakSanBal", monsterId = "boss_bak_san_bal", displayName = "박산발", abilityName = "분신", abilityDescription = "사망 시 분신 2명 소환 (최대 2회)" },
-            new BossSpec { assetName = "Boss_JoJinHo", monsterId = "boss_jo_jin_ho", displayName = "조진호", abilityName = "조작", abilityDescription = "캐릭터 2명의 공격을 회복으로 전환" },
-            new BossSpec { assetName = "Boss_JwaCheol", monsterId = "boss_jwa_cheol", displayName = "좌철", abilityName = "운석", abilityDescription = "운석에 맞은 캐릭터 제거" },
-            new BossSpec { assetName = "Boss_SaHyeonTaek", monsterId = "boss_sa_hyeon_taek", displayName = "사현택", abilityName = "사슬", abilityDescription = "캐릭터 2명의 공격 봉인" },
-            new BossSpec { assetName = "Boss_GongGamHo", monsterId = "boss_gong_gam_ho", displayName = "공감호", abilityName = "거북이 물약", abilityDescription = "필드 전체 공격속도 감소" },
-            new BossSpec { assetName = "Boss_WonTaeYang", monsterId = "boss_won_tae_yang", displayName = "원태양", abilityName = "태양", abilityDescription = "원거리 공격 무효" },
-            new BossSpec { assetName = "Boss_WonDal", monsterId = "boss_won_dal", displayName = "원달", abilityName = "달", abilityDescription = "근거리 공격 무효" },
+            new BossSpec { assetName = "Boss_ChoiMinYeong", monsterId = "boss_choi_min_yeong", displayName = "최민영", abilityName = "소환술", abilityDescription = "몬스터 5마리 소환", hpMultiplier = 0.8f, moveSpeed = 0.5f },
+            new BossSpec { assetName = "Boss_HongChiDal", monsterId = "boss_hong_chi_dal", displayName = "홍치달", abilityName = "빠른 이속", abilityDescription = "스킬 사용 시 이동속도 증가", hpMultiplier = 0.8f, moveSpeed = 0.8f },
+            new BossSpec { assetName = "Boss_BakSanBal", monsterId = "boss_bak_san_bal", displayName = "박산발", abilityName = "분신", abilityDescription = "사망 시 분신 2명 소환 (최대 2회)", hpMultiplier = 0.35f, moveSpeed = 0.5f },
+            new BossSpec { assetName = "Boss_JoJinHo", monsterId = "boss_jo_jin_ho", displayName = "조진호", abilityName = "조작", abilityDescription = "캐릭터 2명의 공격을 회복으로 전환", hpMultiplier = 0.8f, moveSpeed = 0.5f },
+            new BossSpec { assetName = "Boss_JwaCheol", monsterId = "boss_jwa_cheol", displayName = "좌철", abilityName = "운석", abilityDescription = "운석에 맞은 캐릭터 제거", hpMultiplier = 0.75f, moveSpeed = 0.5f },
+            new BossSpec { assetName = "Boss_SaHyeonTaek", monsterId = "boss_sa_hyeon_taek", displayName = "사현택", abilityName = "사슬", abilityDescription = "캐릭터 2명의 공격 봉인", hpMultiplier = 0.85f, moveSpeed = 0.5f },
+            new BossSpec { assetName = "Boss_GongGamHo", monsterId = "boss_gong_gam_ho", displayName = "공감호", abilityName = "거북이 물약", abilityDescription = "필드 전체 공격속도 감소", hpMultiplier = 0.85f, moveSpeed = 0.5f },
+            new BossSpec { assetName = "Boss_WonTaeYang", monsterId = "boss_won_tae_yang", displayName = "원태양", abilityName = "태양", abilityDescription = "원거리 공격 무효", hpMultiplier = 0.6f, moveSpeed = 0.5f },
+            new BossSpec { assetName = "Boss_WonDal", monsterId = "boss_won_dal", displayName = "원달", abilityName = "달", abilityDescription = "근거리 공격 무효", hpMultiplier = 0.6f, moveSpeed = 0.5f },
         };
 
         // 웨이브별 체력 스케일 - anchor(기획서 원문: 1/5/10/15/20)와 interpolated(그 사이,
@@ -140,9 +146,10 @@ namespace TowerDefense.EditorTools
             EnsureFolder(DataFolder);
 
             var placeholderPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlaceholderPrefabPath);
+            if (placeholderPrefab == null) placeholderPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(FallbackPrefabPath);
             if (placeholderPrefab == null)
             {
-                Debug.LogError($"[MonsterDataScaffoldTool] {PlaceholderPrefabPath}를 못 찾음 - prefab 필드를 못 채워서 중단함.");
+                Debug.LogError($"[MonsterDataScaffoldTool] {PlaceholderPrefabPath} / {FallbackPrefabPath}를 둘 다 못 찾음 - prefab 필드를 못 채워서 중단함.");
                 return;
             }
 
@@ -177,7 +184,10 @@ namespace TowerDefense.EditorTools
                 so.monsterId = spec.monsterId;
                 so.displayName = spec.displayName;
                 so.hpMultiplier = spec.hpMultiplier;
-                so.moveSpeedMultiplier = spec.moveSpeedMultiplier;
+                so.moveSpeed = spec.moveSpeed;
+                so.killSp = spec.killSp;
+                so.killSpPerWave = spec.killSpPerWave;
+                so.moveSpeedMultiplier = 1f; // 속도는 moveSpeed(칸/초)에 직접 반영 - 배율은 쓰지 않음
                 so.spawnWeight = spec.spawnWeight;
                 so.isBoss = false;
                 so.damageToBase = 1; // 기획서: 통과 시 라이프 -1(일반 몬스터)
@@ -216,8 +226,11 @@ namespace TowerDefense.EditorTools
 
                 so.monsterId = spec.monsterId;
                 so.displayName = spec.displayName;
-                so.hpMultiplier = 1f; // 기획서에 보스별 배율 언급 없음 - 웨이브 bossBaselineHp를 그대로 씀
-                so.moveSpeedMultiplier = 1f; // 보스별 이동속도 수치 없음 - 기본값
+                so.hpMultiplier = spec.hpMultiplier;
+                so.moveSpeed = spec.moveSpeed;
+                so.killSp = 450f;        // 엑셀: 보스 450 (+150/웨이브), 못 잡으면 절반
+                so.killSpPerWave = 150f;
+                so.moveSpeedMultiplier = 1f;
                 so.spawnWeight = 0f; // 보스는 bossPool에서 개수 기준으로 뽑히므로 안 쓰임(MonsterData.cs 주석 참고)
                 so.isBoss = true;
                 so.damageToBase = 2; // 기획서: 통과 시 라이프 -2(보스)

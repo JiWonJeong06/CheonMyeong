@@ -13,7 +13,20 @@ namespace TowerDefense.Data
     {
         private const string ResourcesFolder = "CharacterData/Generated";
 
+        private const string ConfigResourcePath = "CharacterData/CharacterGlobalConfig";
+
         private static List<CharacterDataSO> _cache;
+        private static CharacterGlobalConfigSO _config;
+
+        /// <summary>전역 설정(최대 강화 레벨/최대 별/버프형 충전 수치 등). 임포트 전이면 null.</summary>
+        public static CharacterGlobalConfigSO Config
+        {
+            get
+            {
+                if (_config == null) _config = Resources.Load<CharacterGlobalConfigSO>(ConfigResourcePath);
+                return _config;
+            }
+        }
 
         public static IReadOnlyList<CharacterDataSO> GetAll()
         {
@@ -43,6 +56,10 @@ namespace TowerDefense.Data
 
         // 에디터에서 재임포트한 뒤 플레이 모드를 다시 들어가지 않고 바로 반영해보고 싶을 때 쓰는 캐시 무효화.
         // 런타임 빌드에서는 딱히 호출할 일 없음(씬 로드마다 static 캐시가 초기화되진 않으니 필요하면 직접 호출).
-        public static void InvalidateCache() => _cache = null;
+        public static void InvalidateCache()
+        {
+            _cache = null;
+            _config = null;
+        }
     }
 }

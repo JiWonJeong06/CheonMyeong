@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_4002
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 4002
+  characterId: char_4002
+  displayName: "\uC1FC\uD0C0"
+  faction: "\uBB34\uC18C\uC18D"
+  description: 
+  weapon: "\uC774\uB3C4\uB958"
+  attackType: 0
+  isSupport: 0
+  mergeType: 0
+  targetPriority: 0
+  baseDamage: 83
+  attackInterval: 0.8
+  range: 1
+  starAttackPower: 31
+  starAttackInterval: 0
+  gaugePerHit: 12
+  killType: 0
+  gaugePerKill: 10
+  ultimateGauge: 500
+  skill:
+    name: "\uD574\uC77C"
+    description: "80\uCD08 \uB9C8\uB2E4 \uD070\uD30C\uB3C4\uB97C \uD615\uC131\uD574
+      \uC801\uB4E4\uC744 \uC9C4\uD589\uBC29\uD5A5\uC758 \uBC18\uB300\uB85C \uBC00\uC5B4\uB0B4\uACE0,
+      n% \uB300\uBBF8\uC9C0\uB97C \uAC00\uD569\uB2C8\uB2E4."
+    parameters:
+    - key: tidalDamagePercent
+      meaning: "\uD574\uC77C \uACF5\uACA9\uB825 n% + \uBC00\uC5B4\uB0B4\uAE30 (80\uCD08\uB9C8\uB2E4)"
+      values:
+      - 150
+      - 170
+      - 195
+      - 240
+      - 300
+  ultimate:
+    name: "\uC554\uC0B4"
+    description: "\uC801\uC744 \uC554\uC0B4 \uC2DC\uB3C4\uD569\uB2C8\uB2E4. n% \uD655\uB960\uB85C
+      \uC0C1\uB300 \uD544\uB4DC\uC758 \uB79C\uB364 \uCE90\uB9AD\uD130 1\uBA85\uC744
+      \uBCC4\uB808\uBCA8\uC744 \uAC10\uC18C \uC2DC\uD0B5\uB2C8\uB2E4. (\uBCC4 \uB808\uBCA8
+      1\uC77C\uC2DC, \uC81C\uAC70)"
+    parameters:
+    - key: starDownChancePercent
+      meaning: "n% \uD655\uB960\uB85C \uC0C1\uB300 \uB79C\uB364 \uCE90\uB9AD\uD130
+        \uBCC4 -1 (1\u2605\uC774\uBA74 \uC81C\uAC70)"
+      values:
+      - 10
+      - 20
+      - 30
+      - 50
+      - 80
+  isStarter: 0
+  unlockCost: 100
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

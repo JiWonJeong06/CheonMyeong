@@ -15,14 +15,16 @@ MonoBehaviour:
   monsterId: boss_bak_san_bal
   displayName: "\uBC15\uC0B0\uBC1C"
   maxHp: 10
-  hpMultiplier: 1
+  hpMultiplier: 0.35
   moveSpeedMultiplier: 1
-  moveSpeed: 2
+  moveSpeed: 0.5
   spawnWeight: 0
   isBoss: 1
   goldReward: 5
+  killSp: 450
+  killSpPerWave: 150
   damageToBase: 2
-  prefab: {fileID: 5542756559366482663, guid: 247c58b82b75c834db37931311e33028, type: 3}
+  prefab: {fileID: 5542756559366482663, guid: 94e4f9cc67247f248b40b7fee4bf5d76, type: 3}
   iconSprite: {fileID: 0}
   abilityName: "\uBD84\uC2E0"
   abilityDescription: "\uC0AC\uB9DD \uC2DC \uBD84\uC2E0 2\uBA85 \uC18C\uD658 (\uCD5C\uB300

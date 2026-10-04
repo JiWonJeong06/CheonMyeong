@@ -57,6 +57,12 @@ namespace TowerDefense.Data
             OnTrophiesChanged?.Invoke(CurrentTrophies);
         }
 
+        /// <summary>무승부 - 트로피 변동 없음(승/패 가감 없이 값만 유지).</summary>
+        public void ReportMatchDraw()
+        {
+            OnTrophiesChanged?.Invoke(CurrentTrophies);
+        }
+
         /// <summary>[디버그 전용] 트로피를 0으로 되돌림 - QA 테스트용. 출시 전 호출부와 함께 제거할 것.</summary>
         [ContextMenu("Debug: Reset Trophies")]
         public void DebugResetTrophies()

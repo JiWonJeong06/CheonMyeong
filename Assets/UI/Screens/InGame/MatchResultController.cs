@@ -30,7 +30,7 @@ namespace TowerDefense.UI
         private Label _resultLabel;
         private Button _confirmButton;
 
-        private Action<bool> _matchEndedHandler;
+        private Action<MatchOutcome> _matchEndedHandler;
         private Coroutine _subscribeRoutine;
 
         private void OnEnable()
@@ -71,13 +71,13 @@ namespace TowerDefense.UI
             _subscribeRoutine = null;
         }
 
-        private void HandleMatchEnded(bool won)
+        private void HandleMatchEnded(MatchOutcome outcome)
         {
             // 일시정지 메뉴/항복 확인창이 열려있는 상태로 매치가 끝날 수 있음(항복 자체가 그 경로임) -
             // 결과 화면 아래에 다른 팝업이 남아있지 않도록 먼저 전부 닫음.
             PopupManager.Instance?.CloseAll();
 
-            _resultLabel.text = won ? "승리!" : "패배...";
+            _resultLabel.text = outcome == MatchOutcome.Win ? "승리!" : (outcome == MatchOutcome.Draw ? "무승부" : "패배...");
             _document.rootVisualElement.style.display = DisplayStyle.Flex;
         }
 

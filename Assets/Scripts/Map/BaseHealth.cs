@@ -24,9 +24,17 @@ namespace TowerDefense.Map
         [Tooltip("천명.pptx 확정값: 라이프 3 (경로 끝 도달 몬스터 -1, 보스 -2, 0 이하면 패배)")]
         [SerializeField] private int maxHp = 3;
 
+        [Tooltip("일반 몬스터가 기지에 이 마리 수만큼 누적 도달할 때마다 하트 1개 감소 (엑셀/결정사항: 3마리 = -1). " +
+                  "보스는 누적과 무관하게 즉시 data.damageToBase(2) 감소.")]
+        [SerializeField, Min(1)] private int normalLeaksPerHeart = 3;
+
+        private int _normalLeakCount; // 웨이브와 무관하게 보드 단위 누적 - 하트 1 깎을 때마다 0으로 리셋
+
         public int CurrentHp { get; private set; }
         public int MaxHp => maxHp;
         public bool IsDestroyed { get; private set; }
+        /// <summary>현재 누적된 일반 몬스터 도달 수(0 ~ normalLeaksPerHeart-1) - UI 표시용.</summary>
+        public int NormalLeakCount => _normalLeakCount;
 
         private bool IsAuthoritative => NetworkManager.Singleton == null || NetworkManager.Singleton.IsServer;
 
@@ -58,7 +66,18 @@ namespace TowerDefense.Map
         {
             if (IsDestroyed) return;
 
-            TakeDamage(data.damageToBase);
+            if (data.isBoss)
+            {
+                TakeDamage(data.damageToBase);
+                return;
+            }
+
+            _normalLeakCount++;
+            if (_normalLeakCount >= normalLeaksPerHeart)
+            {
+                _normalLeakCount = 0;
+                TakeDamage(1);
+            }
         }
 
         public void TakeDamage(int amount)
@@ -80,6 +99,7 @@ namespace TowerDefense.Map
         public void DebugResetHp()
         {
             CurrentHp = maxHp;
+            _normalLeakCount = 0;
             IsDestroyed = false;
             OnHpChanged?.Invoke(CurrentHp, maxHp);
         }

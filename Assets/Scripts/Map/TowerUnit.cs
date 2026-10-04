@@ -36,7 +36,6 @@ namespace TowerDefense.Map
 
         private CharacterDataSO _data;
         private float _cooldownRemaining;
-        private float _diagNoTargetTimer; // [임시 진단 - 원인 파악용, 나중에 제거할 것]
 
         // [버그 수정 - 2026-09-29] 1:1 대전인데 타겟팅이 MonsterRegistry(양쪽 보드 몬스터가 전부
         // 섞여 들어가는 전역 정적 레지스트리)를 보드 구분 없이 그냥 "가장 가까운 놈"으로만 뒤졌음.
@@ -48,6 +47,13 @@ namespace TowerDefense.Map
         // 받아서, 그 보드의 MonsterSpawner가 스폰한 몬스터(MonsterPathFollower.Spawner로 판별)만
         // 타겟팅하도록 필터링함.
         private MonsterSpawner _ownBoardSpawner;
+
+        // [사거리 단위 - 2026-10-04] CharacterDataSO.range는 "월드 유닛"이 아니라 "타일맵 칸 수"
+        // (사거리 1 = 인접 1칸)로 해석함. 칸 크기가 Grid마다 다를 수 있어(현재 0.55) 배치 시점에
+        // 그 보드의 칸 크기(월드 유닛)를 받아 두고, 타겟팅 때 range * 칸 크기로 환산함.
+        private float _cellSize = 1f;
+        private TowerStatModifiers _mods = TowerStatModifiers.Identity; // default(struct)는 배율 0이라 반드시 Identity로 초기화
+        private const float RangeToleranceCells = 0.25f; // 몬스터가 웨이포인트 주변에서 흔들려(0.02~0.1) 인접 칸 중심 거리가 사거리 경계를 넘는 것 방지 (칸 크기 비례)
 
         // [임시 시각 구분 - 2026-09-29] CharacterDataSO 5종 전부 iconSprite/전용 프리팹이 없어서
         // (제네릭 비주얼 프리팹 하나 재사용 - 이 클래스 doc 참고) 배치된 타워가 전부 똑같은 흰색
@@ -69,11 +75,116 @@ namespace TowerDefense.Map
 
         public CharacterDataSO Data => _data;
 
+        // [5단계 - 합성/강화] 합성 별(1~5, 서버가 쓰고 전원이 읽음 - 화면 표시용)과 SP 강화 레벨(서버 전용 캐시).
+        // 합성·강화를 반영한 기본 공격력/간격은 RefreshStats()가 _damage/_interval에 캐싱함(공격마다 재계산 안 함).
+        private readonly NetworkVariable<int> _stars = new NetworkVariable<int>(1);
+        private int _enhanceLevel = 1;
+        private float _damage;
+        private float _interval = 1f;
+        private TextMesh _starLabel;
+
+        public int Stars => _stars.Value;
+        public int EnhanceLevel => _enhanceLevel;
+        public MonsterSpawner OwnBoardSpawner => _ownBoardSpawner;
+
+        // 필드의 모든 타워(서버/클라이언트 공통, 스폰/디스폰 시 등록/해제). 클라이언트는 PlacementGrid 점유 정보가
+        // 없어서(서버만 MarkOccupied) "이 칸에 타워가 있나"를 이 목록으로 조회함(드래그 합성 입력용).
+        private static readonly System.Collections.Generic.List<TowerUnit> s_all = new();
+        public static System.Collections.Generic.IReadOnlyList<TowerUnit> All => s_all;
+
+        // 도메인 리로드를 끈 에디터 설정에서 플레이 세션 사이에 정적 목록이 남는 것을 방지함.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => s_all.Clear();
+
+        /// <summary>월드 좌표가 이 그리드의 해당 칸에 속하는 타워를 찾음(없으면 null). 서버/클라이언트 모두 동작.</summary>
+        public static TowerUnit FindAtCell(PlacementGrid grid, Vector3Int cell)
+        {
+            if (grid == null) return null;
+            for (int i = 0; i < s_all.Count; i++)
+            {
+                var t = s_all[i];
+                if (t != null && grid.WorldToCell(t.transform.position) == cell) return t;
+            }
+            return null;
+        }
+
         public override void OnNetworkSpawn()
         {
             _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-            _tintColor.OnValueChanged += (_, newColor) => ApplyTint(newColor);
+            _tintColor.OnValueChanged += OnTintChanged;
+            _stars.OnValueChanged += OnStarsChanged;
+            s_all.Add(this);
             ApplyTint(_tintColor.Value); // 스폰 시점에 이미 값이 채워져 있을 수 있어 한 번 즉시 반영
+            UpdateStarLabel(_stars.Value);
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            _tintColor.OnValueChanged -= OnTintChanged;
+            _stars.OnValueChanged -= OnStarsChanged;
+            s_all.Remove(this);
+        }
+
+        private void OnTintChanged(Color previous, Color newColor) => ApplyTint(newColor);
+        private void OnStarsChanged(int previous, int newValue) => UpdateStarLabel(newValue);
+
+        /// <summary>[서버 전용] 합성 별/SP 강화 레벨을 반영해 스탯을 다시 계산함(합성·강화 직후, 배치 직후 호출).</summary>
+        public void ApplyProgression(int stars, int enhanceLevel)
+        {
+            if (!IsServer || _data == null) return;
+            _enhanceLevel = Mathf.Clamp(enhanceLevel, 1, TowerProgression.MaxEnhanceLevel);
+            _stars.Value = Mathf.Clamp(stars, 1, TowerProgression.MaxStars);
+            RefreshStats();
+        }
+
+        private void RefreshStats()
+        {
+            TowerProgression.ComputeBaseStats(_data, _stars.Value, _enhanceLevel, out _damage, out _interval);
+        }
+
+        // 임시 별 표시: 2★ 이상일 때 칸 우하단에 숫자를 띄움(전용 아트/UI가 나오면 교체). 한 번 만들어 재사용하고
+        // 타워 오브젝트의 자식이라 디스폰 때 같이 파괴됨.
+        private void UpdateStarLabel(int stars)
+        {
+            if (stars <= 1)
+            {
+                if (_starLabel != null) _starLabel.gameObject.SetActive(false);
+                return;
+            }
+
+            if (_starLabel == null)
+            {
+                if (_spriteRenderer == null) _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+                var go = new GameObject("StarLabel");
+                go.transform.SetParent(transform, false);
+
+                Vector3 center = transform.position;
+                float cell = 0.55f;
+                if (_spriteRenderer != null)
+                {
+                    center = _spriteRenderer.bounds.center;
+                    cell = Mathf.Max(0.1f, _spriteRenderer.bounds.size.x);
+                }
+                go.transform.position = center + new Vector3(cell * 0.35f, -cell * 0.35f, 0f);
+
+                _starLabel = go.AddComponent<TextMesh>();
+                _starLabel.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                _starLabel.fontSize = 32;
+                _starLabel.characterSize = cell * 0.125f / Mathf.Max(0.0001f, transform.lossyScale.x);
+                _starLabel.anchor = TextAnchor.MiddleCenter;
+                _starLabel.color = Color.yellow;
+
+                var meshRenderer = go.GetComponent<MeshRenderer>();
+                meshRenderer.sharedMaterial = _starLabel.font.material;
+                if (_spriteRenderer != null)
+                {
+                    meshRenderer.sortingLayerID = _spriteRenderer.sortingLayerID;
+                    meshRenderer.sortingOrder = _spriteRenderer.sortingOrder + 1;
+                }
+            }
+
+            _starLabel.gameObject.SetActive(true);
+            _starLabel.text = stars.ToString();
         }
 
         private void ApplyTint(Color color)
@@ -102,24 +213,34 @@ namespace TowerDefense.Map
         // 타워가 스스로 자기 스탯을 해석해서 공격하는 구조라, 나중에 캐릭터 종류가 늘어나도 이
         // 스크립트는 고칠 필요 없음(데이터 주도 설계). ownBoardSpawner: 이 타워가 배치된 보드의
         // MonsterSpawner(PlayerBoard.Spawner) - 타겟팅을 그 보드 소속 몬스터로만 한정하는 데 씀.
-        public void Init(CharacterDataSO data, MonsterSpawner ownBoardSpawner)
+        public void Init(CharacterDataSO data, MonsterSpawner ownBoardSpawner, float cellSize = 1f)
+        {
+            Init(data, ownBoardSpawner, cellSize, TowerStatModifiers.Identity);
+        }
+
+        // modifiers: 노드 트리 계층(캐릭터 레벨 + 소속/전체 공격력·공속 노드) 배율 - MatchController가 배치한
+        // 플레이어의 PlayerLoadout으로 계산해서 넘김. 합성/SP 강화 배율은 정지원 파트라 여기엔 없음.
+        public void Init(CharacterDataSO data, MonsterSpawner ownBoardSpawner, float cellSize, TowerStatModifiers modifiers)
         {
             _data = data;
+            _mods = modifiers;
             _ownBoardSpawner = ownBoardSpawner;
+            _cellSize = cellSize > 0f ? cellSize : 1f;
             _cooldownRemaining = 0f;
+            _enhanceLevel = 1;
+            RefreshStats(); // 합성 1★/강화 Lv1 기준 - 이후 MatchController가 ApplyProgression으로 실제 강화 레벨을 반영함
 
             // NetworkVariable 쓰기는 서버 권위 - Init 자체가 RequestPlaceTowerRpc(서버 전용
             // 실행 경로) 안에서만 호출되지만, 혹시 모를 오용에 대비해 방어적으로 한 번 더 확인함.
             if (IsServer) _tintColor.Value = ColorFromCharacterId(data.characterId);
 
-            // [임시 진단 - 원인 파악용, 나중에 제거할 것]
-            Debug.Log($"[TowerUnit][진단] {data.displayName} 배치/Init 완료 - range={data.range}, baseDamage={data.baseDamage}, attackSpeed={data.attackSpeed}, ownBoardSpawner={(ownBoardSpawner != null ? ownBoardSpawner.name : "NULL")}");
         }
 
         private void Update()
         {
             if (!IsServer) return; // 클라이언트 쪽 사본은 그냥 서 있는 모습만 보여주면 됨
             if (_data == null) return;
+            if (_data.isSupport) return; // 버프형은 기본 공격을 하지 않음(스킬·궁극기만 사용 - 엑셀 구현 규칙)
 
             _cooldownRemaining -= Time.deltaTime;
             if (_cooldownRemaining > 0f) return;
@@ -127,31 +248,21 @@ namespace TowerDefense.Map
             var target = FindNearestMonsterInRange();
             if (target == null)
             {
-                // [임시 진단 - 원인 파악용, 나중에 제거할 것] 약 2초에 한 번만 찍음(스팸 방지).
-                _diagNoTargetTimer -= Time.deltaTime;
-                if (_diagNoTargetTimer <= 0f)
-                {
-                    _diagNoTargetTimer = 2f;
-                    int totalMonsters = MonsterRegistry.GetAll().Count;
-                    int sameBoardMonsters = 0;
-                    foreach (var m in MonsterRegistry.GetAll())
-                    {
-                        if (m != null && m.IsAlive && _ownBoardSpawner != null && m.Spawner == _ownBoardSpawner) sameBoardMonsters++;
-                    }
-                    Debug.Log($"[TowerUnit][진단] {(_data != null ? _data.displayName : "?")} 타겟 없음 - 전체 몬스터={totalMonsters}, 내 보드 소속 몬스터={sameBoardMonsters}, ownBoardSpawner={(_ownBoardSpawner != null ? _ownBoardSpawner.name : "NULL")}, range={_data?.range}");
-                }
                 return;
             }
 
             Attack(target);
 
-            // attackSpeed = 초당 공격 횟수로 해석함(예: 1.5면 1초에 1.5회 공격) - 0 이하로 잘못
-            // 설정된 데이터가 들어와도 무한루프/0으로 나누기 없이 안전하게 막아둠.
+            // attackInterval = 공격 간격(초, 낮을수록 빠름 - 엑셀 규칙). 공속 증가는 '간격 ÷ (1 + n%)'라서
+            // 날씨 공속 배율(1.2 = 20% 증가, 0.9 = 10% 감소)로 나누면 같은 결과임. 0 이하로 잘못
+            // 설정된 데이터가 들어와도 무한루프 없이 안전하게 막아둠.
             // 계절/날씨(미세먼지 10% 감소, 바람 20% 증가)를 곱함 - 타워는 웨이브 경계를 넘어 계속
             // 존재하므로(몬스터와 달리 스폰 시점 고정이 아니라) MatchController.CurrentWeather를
             // 매번 최신값으로 읽음(WeatherEffectTable 참고).
             float weatherAttackSpeedMult = CurrentWeatherMultiplierSafe(WeatherEffectTable.AttackSpeedMultiplier);
-            _cooldownRemaining = _data.attackSpeed > 0f ? 1f / (_data.attackSpeed * weatherAttackSpeedMult) : 1f;
+            _cooldownRemaining = _interval > 0f && weatherAttackSpeedMult > 0f
+                ? _interval * _mods.attackIntervalMultiplier / weatherAttackSpeedMult
+                : 1f;
         }
 
         // MatchController.Instance는 매치 시작 전(로비/씬 전환 중)엔 아직 null일 수 있어서, 그럴 땐
@@ -166,14 +277,19 @@ namespace TowerDefense.Map
 
         private MonsterPathFollower FindNearestMonsterInRange()
         {
-            MonsterPathFollower nearest = null;
+            MonsterPathFollower best = null;
+            float bestPrimary = 0f;
+            float bestProgress = 0f;
+            var priority = _data.targetPriority;
 
             // 계절/날씨(안개 사거리 1 감소)를 반영한 유효 사거리 - 음수로 내려가지 않게 0에서 clamp함.
             var mc = MatchController.Instance;
             var weather = mc != null ? (WeatherType)mc.CurrentWeather.Value : WeatherType.Clear;
             float effectiveRange = Mathf.Max(0f, _data.range + WeatherEffectTable.RangeDelta(weather));
 
-            float nearestSqrDist = effectiveRange * effectiveRange;
+            // 칸 단위 사거리 → 월드 유닛 환산 (_cellSize 필드 주석 참고)
+            float effectiveRangeWorld = (effectiveRange + RangeToleranceCells) * _cellSize;
+            float rangeSqr = effectiveRangeWorld * effectiveRangeWorld;
             Vector3 myPos = transform.position;
 
             foreach (var monster in MonsterRegistry.GetAll())
@@ -184,24 +300,39 @@ namespace TowerDefense.Map
                 // 상대 보드를 공격하는 것보다 "그 프레임에 공격 안 함"이 훨씬 안전한 실패 방식).
                 if (_ownBoardSpawner == null || monster.Spawner != _ownBoardSpawner) continue;
 
-                float sqrDist = (monster.Position - myPos).sqrMagnitude;
-                if (sqrDist <= nearestSqrDist)
+                // 2D 프로젝트라 z 차이는 무시함 - 몬스터/타워의 z 오프셋(웨이포인트 z 등)이 3D 거리를 부풀려
+                // 화면상 인접해도 사거리 밖으로 판정되는 문제를 막음.
+                float dx = monster.Position.x - myPos.x;
+                float dy = monster.Position.y - myPos.y;
+                float sqrDist = dx * dx + dy * dy;
+                if (sqrDist > rangeSqr) continue;
+
+                // 우선순위(엑셀 F열): 맨 앞 = 경로 진행도가 가장 큰(기지에 가장 가까운) 적, 체력 높은/낮은 적 = 현재 체력 기준.
+                // 동점이면 경로 진행도가 큰 쪽. 사거리 안 후보를 한 번만 훑어 처리함(할당 없음).
+                float progress = monster.PathProgress;
+                float primary = priority switch
                 {
-                    nearestSqrDist = sqrDist;
-                    nearest = monster;
+                    TargetPriority.HighestHp => monster.CurrentHp,
+                    TargetPriority.LowestHp => -monster.CurrentHp,
+                    _ => progress,
+                };
+
+                if (best == null || primary > bestPrimary || (primary == bestPrimary && progress > bestProgress))
+                {
+                    best = monster;
+                    bestPrimary = primary;
+                    bestProgress = progress;
                 }
             }
 
-            return nearest;
+            return best;
         }
 
         private void Attack(MonsterPathFollower target)
         {
             // 계절/날씨(폭염 15% 증가)를 반영한 실제 공격력 - 히트스캔/투사체 두 경로 모두 이 값을 씀.
-            float damage = _data.baseDamage * CurrentWeatherMultiplierSafe(WeatherEffectTable.AttackDamageMultiplier);
+            float damage = _damage * _mods.damageMultiplier * CurrentWeatherMultiplierSafe(WeatherEffectTable.AttackDamageMultiplier);
 
-            // [임시 진단 - 원인 파악용, 나중에 제거할 것]
-            Debug.Log($"[TowerUnit][진단] {_data.displayName} Attack() 실행 - target={target.name}, damage={damage}, projectilePrefab={(projectilePrefab != null ? "있음" : "없음(히트스캔)")}");
 
             if (projectilePrefab == null)
             {

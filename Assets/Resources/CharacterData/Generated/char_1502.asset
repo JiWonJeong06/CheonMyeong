@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_1502
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 1502
+  characterId: char_1502
+  displayName: "\uC11C\uC724\uC544"
+  faction: "\uD751\uC5F0\uD68C"
+  description: 
+  weapon: "\uB9C8\uBC95"
+  attackType: 1
+  isSupport: 1
+  mergeType: 1
+  targetPriority: 0
+  baseDamage: 99
+  attackInterval: 1.3
+  range: 5
+  starAttackPower: 18
+  starAttackInterval: -0.1
+  gaugePerHit: 0
+  killType: 1
+  gaugePerKill: 5
+  ultimateGauge: 600
+  skill:
+    name: "\uC800\uC8FC"
+    description: "(n\uCD08\uB9C8\uB2E4) \uB79C\uB364\uC73C\uB85C \uC0C1\uB300 \uCE90\uB9AD\uD130
+      1\uBA85\uC5D0\uAC8C \uC800\uC8FC\uB97C \uB0B4\uB9BD\uB2C8\uB2E4. \uC800\uC8FC\uB294
+      \uC0C1\uB300 \uCE90\uB9AD\uD130\uC758 \uD604\uC7AC \uAD81\uADF9\uAE30 \uAC8C\uC774\uC9C0\uB97C
+      50% \uAC10\uC18C\uC2DC\uD0B5\uB2C8\uB2E4. \uBCF8\uC778\uC740 \uACF5\uACA9\uD558\uC9C0
+      \uBABB\uD558\uB294 \uBC84\uD504\uD615 \uCE90\uB9AD\uD130\uC785\uB2C8\uB2E4."
+    parameters:
+    - key: curseCooldownSeconds
+      meaning: "\uC800\uC8FC n\uCD08\uB9C8\uB2E4 (\uC0C1\uB300 1\uBA85 \uAD81\uADF9\uAE30
+        \uAC8C\uC774\uC9C0 -50%)"
+      values:
+      - 45
+      - 44
+      - 42
+      - 39
+      - 35
+  ultimate:
+    name: "\uBC31\uC57C"
+    description: "(10\uCD08 \uB3D9\uC548) \uC0AC\uAC70\uB9AC \uB0B4 \uC801\uC774
+      \uBC1B\uB294 \uBAA8\uB4E0 \uD53C\uD574\uAC00 n% \uC99D\uAC00 \uD55C\uB2E4."
+    parameters:
+    - key: damageTakenPercent
+      meaning: "10\uCD08 \uB3D9\uC548 \uC0AC\uAC70\uB9AC \uB0B4 \uC801\uC774 \uBC1B\uB294
+        \uD53C\uD574 n% \uC99D\uAC00"
+      values:
+      - 10
+      - 12
+      - 15
+      - 19
+      - 25
+  isStarter: 0
+  unlockCost: 100
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

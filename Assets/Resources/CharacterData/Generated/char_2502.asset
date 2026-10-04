@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_2502
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 2502
+  characterId: char_2502
+  displayName: "\uC815\uB2E4\uD76C"
+  faction: "\uC9C0\uD558\uBB38"
+  description: 
+  weapon: "\uD45C\uCC3D"
+  attackType: 1
+  isSupport: 0
+  mergeType: 1
+  targetPriority: 0
+  baseDamage: 80
+  attackInterval: 1.2
+  range: 3
+  starAttackPower: 15
+  starAttackInterval: -0.092
+  gaugePerHit: 18
+  killType: 1
+  gaugePerKill: 5
+  ultimateGauge: 200
+  skill:
+    name: "\uD45C\uCC3D"
+    description: "\uC77C\uC790\uB85C \uB0A0\uC544\uAC00\uB294 3\uAC1C\uC758 \uD45C\uCC3D\uC744
+      \uB358\uC9D1\uB2C8\uB2E4. (\uD45C\uCC3D \uACF5\uACA9\uB825\uC758 n%)"
+    parameters:
+    - key: shurikenDamagePercent
+      meaning: "\uD45C\uCC3D 3\uAC1C, \uAC1C\uB2F9 \uACF5\uACA9\uB825 n%"
+      values:
+      - 50
+      - 53
+      - 56
+      - 62
+      - 70
+  ultimate:
+    name: "\uBD80\uCC44\uAF34"
+    description: "(11\uCD08 \uB3D9\uC548) \uBD80\uCC44\uAF34\uB85C \uB0A0\uC544\uAC00\uB294
+      6\uAC1C\uC758 \uD45C\uCC3D\uC744 \uB358\uC9D1\uB2C8\uB2E4. (\uD45C\uCC3D \uACF5\uACA9\uB825
+      n%)"
+    parameters:
+    - key: fanShurikenDamagePercent
+      meaning: "11\uCD08 \uB3D9\uC548 \uD45C\uCC3D 6\uAC1C \uBD80\uCC44\uAF34, \uAC1C\uB2F9
+        \uACF5\uACA9\uB825 n%"
+      values:
+      - 100
+      - 115
+      - 130
+      - 160
+      - 200
+  isStarter: 0
+  unlockCost: 100
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

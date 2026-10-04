@@ -30,13 +30,18 @@ namespace TowerDefense.UI
     [RequireComponent(typeof(UIDocument))]
     public class TechTreeController : MonoBehaviour, IPopupPanel
     {
-        [Tooltip("확인창 GameObject (하이어라키에서 기본 비활성화 상태)")]
+        [Tooltip("[현재 미사용] 노드 상세창(NodeDetailPanel)이 해금/레벨업 확인 역할을 대신함 - 기존 씬 참조가 끊기지 않게 필드만 유지")]
         [SerializeField] private ConfirmDialogController confirmDialog;
 
         private const float NodeSize = 80f;
         private const float CoreNodeSize = 110f; // 코어 노드는 일반 노드보다 크게
+        private const float HubNodeSize = 100f;  // 조직 허브 노드(천명회 등)도 일반 노드보다 크게(.tech-node-hub와 맞춤)
         private const float EdgeMargin = 12f; // 캔버스 가장자리와 가장 바깥쪽 노드 사이 최소 여백
         private const float CoreNodeGap = 40f; // 코어 테두리와 첫 번째 링(depth 0) 노드 사이 최소 간격
+        private const float NodeSpacingGap = 28f; // 같은 링에서 이웃한 노드 사이 최소 빈틈(노드가 겹쳐 안 보이는 것 방지)
+        private const float MinRingStep = NodeSize + 30f; // 링과 링 사이 최소 간격
+        private const float MinZoom = 0.3f;
+        private const float MaxZoom = 1.6f;
 
         private static readonly Color UnlockedFillColor = new(70f / 255f, 150f / 255f, 90f / 255f);
         private static readonly Color AvailableFillColor = new(70f / 255f, 110f / 255f, 190f / 255f);
@@ -54,11 +59,14 @@ namespace TowerDefense.UI
         private Button _closeButton;
         private TextField _searchField;
         private Button _debugResetButton;
+        private NodeDetailPanel _detailPanel; // 노드를 눌렀을 때 뜨는 상세창(코드로 생성 - 씬/UXML 수정 불필요)
 
         private readonly Dictionary<string, VisualElement> _nodeElements = new();
         private readonly Dictionary<string, HexagonVisual> _nodeHexVisuals = new();
 
         private bool _isDragging;
+        private float _zoom = 1f;          // 마우스 휠로 바꾸는 확대 배율
+        private Vector2 _worldSize;        // 노드가 겹치지 않게 펼친 트리 전체 크기(캔버스보다 클 수 있음)
         private Vector2 _panOffset;
         private Vector2 _dragStartPointer;
         private Vector2 _dragStartPanOffset;
@@ -83,10 +91,18 @@ namespace TowerDefense.UI
             _canvas.RegisterCallback<PointerMoveEvent>(OnCanvasPointerMove);
             _canvas.RegisterCallback<PointerUpEvent>(OnCanvasPointerUp);
             _canvas.RegisterCallback<PointerCaptureOutEvent>(OnCanvasPointerCaptureOut);
+            _canvas.RegisterCallback<WheelEvent>(OnCanvasWheel);
+            _canvas.RegisterCallback<ClickEvent>(OnCanvasClicked);
 
             // 팝업을 새로 열 때마다 이전에 옮겨둔 화면 위치는 초기화하고 중앙에서 다시 시작.
             _panOffset = Vector2.zero;
+            _zoom = 1f;
             _isDragging = false;
+
+            // 상세창은 팝업 루트(전체 화면 딤 컨테이너) 위에 덮어 띄움 - UIDocument는 팝업을 열 때마다 트리를
+            // 새로 만들기 때문에 매번 새로 생성해도 이전 인스턴스가 남지 않음.
+            _detailPanel = new NodeDetailPanel();
+            (root.Q<VisualElement>("popup-root") ?? root).Add(_detailPanel);
 
             _world = new VisualElement { name = "techtree-world" };
             _world.style.position = Position.Absolute;
@@ -94,6 +110,9 @@ namespace TowerDefense.UI
             _world.style.top = 0;
             _world.style.right = 0;
             _world.style.bottom = 0;
+            // 월드(캔버스보다 커질 수 있는 컨테이너)가 빈 공간 클릭을 먹어버리면 캔버스가 드래그를 못 받음 -
+            // 빈 곳은 항상 캔버스가 target이 되도록 월드 자신은 클릭을 무시함(자식 노드는 그대로 클릭됨).
+            _world.pickingMode = PickingMode.Ignore;
             _canvas.Add(_world);
 
             BuildGrid();
@@ -112,12 +131,19 @@ namespace TowerDefense.UI
                 _canvas.UnregisterCallback<PointerMoveEvent>(OnCanvasPointerMove);
                 _canvas.UnregisterCallback<PointerUpEvent>(OnCanvasPointerUp);
                 _canvas.UnregisterCallback<PointerCaptureOutEvent>(OnCanvasPointerCaptureOut);
+                _canvas.UnregisterCallback<WheelEvent>(OnCanvasWheel);
+                _canvas.UnregisterCallback<ClickEvent>(OnCanvasClicked);
             }
 
             if (TechTreeManager.Instance != null)
             {
                 TechTreeManager.Instance.OnNodeUnlocked -= OnNodeUnlockedChanged;
             }
+            if (CharacterLevelManager.Instance != null)
+            {
+                CharacterLevelManager.Instance.OnLevelChanged -= OnCharacterLevelChanged;
+            }
+            _detailPanel = null;
         }
 
         public void Open() => PopupManager.Instance.Open(this);
@@ -150,7 +176,45 @@ namespace TowerDefense.UI
             // style.translate는 레이아웃(Yoga) 재계산 없이 화면에 그려지는 위치만 옮기는 렌더 트랜스폼이라
             // 드래그 중 매 프레임 호출해도 성능 부담이 적음.
             // (구버전 API인 VisualElement.transform.position은 Unity 6000.3 기준 Obsolete라 안 씀.)
+            ApplyViewTransform();
+        }
+
+        // 이동(translate, 화면 픽셀 단위)과 확대(scale, 월드 중심 기준)를 월드에 적용함 - 둘 다 렌더 트랜스폼이라
+        // 레이아웃 재계산 없이 매 프레임 호출해도 가벼움.
+        private void ApplyViewTransform()
+        {
             _world.style.translate = new Translate(_panOffset.x, _panOffset.y, 0f);
+            _world.style.scale = new Scale(new Vector3(_zoom, _zoom, 1f));
+        }
+
+        // 마우스 휠 = 커서 위치를 기준으로 확대/축소(휠을 아래로 굴리면 축소). 월드 중심이 캔버스 중심에 놓여 있으므로
+        // 커서 아래의 점이 그대로 커서 아래에 남도록 이동값을 같이 보정함.
+        private void OnCanvasWheel(WheelEvent evt)
+        {
+            float newZoom = Mathf.Clamp(_zoom * (1f - evt.delta.y * 0.05f), MinZoom, MaxZoom);
+            if (!Mathf.Approximately(newZoom, _zoom))
+            {
+                Vector2 cursor = _canvas.WorldToLocal(evt.mousePosition);
+                Vector2 anchor = new Vector2(_canvas.resolvedStyle.width / 2f, _canvas.resolvedStyle.height / 2f);
+                _panOffset = cursor - anchor - (cursor - anchor - _panOffset) * (newZoom / _zoom);
+                _zoom = newZoom;
+                ApplyViewTransform();
+            }
+            evt.StopPropagation();
+        }
+
+        // 빈 공간 더블클릭 = 전체 보기(트리 전체가 캔버스에 들어오도록 축소하고 중앙으로).
+        private void OnCanvasClicked(ClickEvent evt)
+        {
+            if (evt.clickCount < 2 || evt.target != _canvas) return;
+
+            float w = _canvas.resolvedStyle.width;
+            float h = _canvas.resolvedStyle.height;
+            if (_worldSize.x <= 0f || _worldSize.y <= 0f || w <= 0f || h <= 0f) return;
+
+            _zoom = Mathf.Clamp(Mathf.Min(w / _worldSize.x, h / _worldSize.y), MinZoom, 1f);
+            _panOffset = Vector2.zero;
+            ApplyViewTransform();
         }
 
         private void OnCanvasPointerUp(PointerUpEvent evt) => EndDrag(evt.pointerId);
@@ -180,6 +244,12 @@ namespace TowerDefense.UI
 
             TechTreeManager.Instance.OnNodeUnlocked -= OnNodeUnlockedChanged;
             TechTreeManager.Instance.OnNodeUnlocked += OnNodeUnlockedChanged;
+
+            if (CharacterLevelManager.Instance != null)
+            {
+                CharacterLevelManager.Instance.OnLevelChanged -= OnCharacterLevelChanged;
+                CharacterLevelManager.Instance.OnLevelChanged += OnCharacterLevelChanged;
+            }
 
             // 선(연결선)이 가장 먼저, 그다음 코어, 그다음 일반 노드 순으로 추가해야
             // 아래에서부터 선 -> 코어 -> 노드 순으로 겹쳐 그려짐.
@@ -241,6 +311,7 @@ namespace TowerDefense.UI
             var nodes = TechTreeManager.Instance.GetAllNodes();
             if (nodes.Count == 0) return;
 
+            var nodeById = nodes.ToDictionary(n => n.nodeId);
             var depthById = ComputeDepths(nodes);
             int maxDepth = depthById.Values.DefaultIfEmpty(0).Max();
 
@@ -267,6 +338,15 @@ namespace TowerDefense.UI
                 list.Add(node);
             }
 
+            // 허브 아래에서는 스탯 노드 가지를 캐릭터들 "사이사이"에 끼워 넣음(한쪽에 몰리지 않게 균등 간격으로).
+            foreach (var node in nodes)
+            {
+                if (node.isHub && childrenByParent.TryGetValue(node.nodeId, out var hubKids))
+                {
+                    childrenByParent[node.nodeId] = InterleaveStatBranches(hubKids);
+                }
+            }
+
             // 서브트리 크기(자기 자신 + 모든 후손 수) - 가지마다 배정할 각도 폭을 이 크기에 비례하게
             // 나눠서, 후손이 많은 가지가 더 넓은 부채꼴을 차지하게 함(전부 균등폭이면 노드 많은 가지가
             // 좁은 구간에 몰려서 서로 겹침).
@@ -284,26 +364,17 @@ namespace TowerDefense.UI
             }
             foreach (var root in roots) GetSubtreeSize(root);
 
-            float cx = w / 2f;
-            float cy = h / 2f;
-            var corePos = new Vector2(cx, cy);
             float maxRadius = Mathf.Max(0f, Mathf.Min(w, h) / 2f - NodeSize / 2f - EdgeMargin);
-            // depth 0(첫 번째 링) 노드는 코어 테두리에서 최소 CoreNodeGap만큼 떨어진 지점부터 시작하고,
-            // 그 뒤(depth 1, 2, ...)는 남은 공간을 depth 수만큼 균등하게 나눠 바깥으로 퍼짐 -
-            // 예전엔 반지름 0(코어 중심)부터 링 간격을 계산해서 depth 0 노드가 코어와 거의 겹쳐 보였음.
+            // 캔버스에 딱 맞추는 기본 반지름(트리가 작을 때 예전처럼 화면을 꽉 채우는 용도).
             float coreClearance = Mathf.Min(CoreNodeSize / 2f + NodeSize / 2f + CoreNodeGap, maxRadius);
             float ringStep = maxDepth > 0 ? (maxRadius - coreClearance) / maxDepth : 0f;
 
-            var positions = new Dictionary<string, Vector2>();
-
-            // node에 배정된 [angleStart, angleEnd] 구간의 중앙 각도에 놓고, 자식들은 이 구간을
-            // 서브트리 크기 비율로 나눠 물려받아 재귀적으로 배치함.
+            // 1) 각도 배정 - 반지름과 무관. node에 배정된 [angleStart, angleEnd] 구간의 중앙 각도에 놓고, 자식들은
+            //    이 구간을 서브트리 크기 비율로 나눠 물려받아 재귀적으로 배정함.
+            var angleById = new Dictionary<string, float>();
             void AssignSector(TechNodeData node, float angleStart, float angleEnd)
             {
-                float angle = (angleStart + angleEnd) / 2f;
-                float radius = coreClearance + ringStep * depthById[node.nodeId];
-                float rad = angle * Mathf.Deg2Rad;
-                positions[node.nodeId] = new Vector2(cx + radius * Mathf.Cos(rad), cy + radius * Mathf.Sin(rad));
+                angleById[node.nodeId] = (angleStart + angleEnd) / 2f;
 
                 if (!childrenByParent.TryGetValue(node.nodeId, out var kids) || kids.Count == 0) return;
 
@@ -332,18 +403,78 @@ namespace TowerDefense.UI
                 }
             }
 
+            // 2) depth별 반지름 - 같은 링의 이웃 노드가 겹치지 않도록(노드 크기 + 빈틈) 링을 키움. 캐릭터 노드처럼
+            //    한 링에 수십 개가 몰리면 캔버스보다 훨씬 커질 수 있고, 넘치는 부분은 드래그/휠로 둘러봄.
+            //    (예전엔 캔버스 안에 전부 욱여넣어서 노드가 겹쳐 안 보였음.)
+            float spacing = NodeSize + NodeSpacingGap;
+            var anglesByDepth = new List<float>[maxDepth + 1];
+            for (int d = 0; d <= maxDepth; d++) anglesByDepth[d] = new List<float>();
+            foreach (var node in nodes)
+            {
+                if (angleById.TryGetValue(node.nodeId, out float ang)) anglesByDepth[depthById[node.nodeId]].Add(ang);
+            }
+
+            var radiusByDepth = new float[maxDepth + 1];
+            float previousRadius = 0f;
+            for (int d = 0; d <= maxDepth; d++)
+            {
+                float required = d == 0 ? coreClearance : previousRadius + MinRingStep;
+                required = Mathf.Max(required, coreClearance + ringStep * d);
+
+                var angles = anglesByDepth[d];
+                if (angles.Count >= 2)
+                {
+                    angles.Sort();
+                    float minGap = 360f - (angles[angles.Count - 1] - angles[0]); // 마지막 → 첫 번째(한 바퀴 돌아서)
+                    for (int i = 1; i < angles.Count; i++) minGap = Mathf.Min(minGap, angles[i] - angles[i - 1]);
+                    minGap = Mathf.Clamp(minGap, 0.5f, 180f);
+                    // 반지름 r의 원 위에서 각도 차 g인 두 점의 현 길이 = 2 r sin(g/2) ≥ spacing
+                    required = Mathf.Max(required, spacing / (2f * Mathf.Sin(minGap * Mathf.Deg2Rad / 2f)));
+                }
+
+                radiusByDepth[d] = required;
+                previousRadius = required;
+            }
+
+            // 3) 월드 크기 = 캔버스와 트리 전체 중 큰 쪽. 월드 중심을 캔버스 중심에 맞춰 첫 화면엔 코어가 중앙에 옴.
+            float halfExtent = radiusByDepth[maxDepth] + NodeSize / 2f + EdgeMargin;
+            float worldW = Mathf.Max(w, halfExtent * 2f);
+            float worldH = Mathf.Max(h, halfExtent * 2f);
+            _worldSize = new Vector2(worldW, worldH);
+
+            _world.style.right = StyleKeyword.Auto;
+            _world.style.bottom = StyleKeyword.Auto;
+            _world.style.width = worldW;
+            _world.style.height = worldH;
+            _world.style.left = (w - worldW) / 2f;
+            _world.style.top = (h - worldH) / 2f;
+            ApplyViewTransform();
+
+            float cx = worldW / 2f;
+            float cy = worldH / 2f;
+            var corePos = new Vector2(cx, cy);
+
+            var positions = new Dictionary<string, Vector2>();
+            foreach (var kvp in angleById)
+            {
+                float radius = radiusByDepth[depthById[kvp.Key]];
+                float rad = kvp.Value * Mathf.Deg2Rad;
+                positions[kvp.Key] = new Vector2(cx + radius * Mathf.Cos(rad), cy + radius * Mathf.Sin(rad));
+            }
+
             foreach (var kvp in positions)
             {
                 if (!_nodeElements.TryGetValue(kvp.Key, out var element)) continue;
-                element.style.left = kvp.Value.x - NodeSize / 2f;
-                element.style.top = kvp.Value.y - NodeSize / 2f;
+                float size = nodeById[kvp.Key].isHub ? HubNodeSize : NodeSize; // 허브는 더 큼
+                element.style.left = kvp.Value.x - size / 2f;
+                element.style.top = kvp.Value.y - size / 2f;
             }
 
             _coreElement.style.left = corePos.x - CoreNodeSize / 2f;
             _coreElement.style.top = corePos.y - CoreNodeSize / 2f;
 
-            _connectorLayer.style.width = w;
-            _connectorLayer.style.height = h;
+            _connectorLayer.style.width = worldW;
+            _connectorLayer.style.height = worldH;
             _connectorLayer.Lines.Clear();
 
             // 1) 실제 선행조건 기반 연결선 - 선행조건이 여러 개인 노드(예: 복합 강화)는 primaryParent가
@@ -357,7 +488,14 @@ namespace TowerDefense.UI
                 foreach (var prereqId in node.prerequisiteNodeIds)
                 {
                     if (!positions.TryGetValue(prereqId, out var from)) continue;
-                    _connectorLayer.Lines.Add(new ConnectorLayer.Line(from, to, childUnlocked));
+                    // 허브에서 뻗어나가는 선은 그 조직 색으로(스탯 노드까지 이어지는 선도 허브 색 - 어느 조직 가지인지 보이게).
+                    Color tint = default;
+                    if (nodeById.TryGetValue(prereqId, out var prereqNode) && prereqNode.isHub &&
+                        NodeTreeLineColors.TryGet(prereqNode.hubLine, out _, out var lineColor))
+                    {
+                        tint = lineColor;
+                    }
+                    _connectorLayer.Lines.Add(new ConnectorLayer.Line(from, to, childUnlocked, tint));
                 }
             }
 
@@ -367,10 +505,40 @@ namespace TowerDefense.UI
             {
                 if (!positions.TryGetValue(node.nodeId, out var to)) continue;
                 bool unlocked = TechTreeManager.Instance.IsUnlocked(node.nodeId);
-                _connectorLayer.Lines.Add(new ConnectorLayer.Line(corePos, to, unlocked));
+                Color tint = default;
+                if (node.isHub && NodeTreeLineColors.TryGet(node.hubLine, out _, out var lineColor)) tint = lineColor;
+                _connectorLayer.Lines.Add(new ConnectorLayer.Line(corePos, to, unlocked, tint));
             }
 
             _connectorLayer.Redraw();
+        }
+
+        // 허브의 자식 목록에서 캐릭터 노드들 사이에 스탯 노드 가지를 균등하게 끼워 넣은 새 목록을 만듦.
+        // 스탯 가지가 k개, 캐릭터가 n명이면 i번째 가지를 캐릭터 n*(i+1)/(k+1)번째 뒤에 놓음.
+        private static List<TechNodeData> InterleaveStatBranches(List<TechNodeData> kids)
+        {
+            var characters = new List<TechNodeData>();
+            var stats = new List<TechNodeData>();
+            foreach (var kid in kids)
+            {
+                if (!string.IsNullOrEmpty(kid.linkedCharacterId)) characters.Add(kid);
+                else stats.Add(kid);
+            }
+            if (stats.Count == 0 || characters.Count == 0) return kids;
+
+            var result = new List<TechNodeData>(kids.Count);
+            int nextStat = 0;
+            for (int i = 0; i < characters.Count; i++)
+            {
+                result.Add(characters[i]);
+                while (nextStat < stats.Count && i + 1 >= characters.Count * (nextStat + 1) / (stats.Count + 1))
+                {
+                    result.Add(stats[nextStat]);
+                    nextStat++;
+                }
+            }
+            while (nextStat < stats.Count) result.Add(stats[nextStat++]);
+            return result;
         }
 
         // 각 노드의 "선행조건 단계 깊이" 계산 (선행조건 없음 = 0, 있으면 선행조건들 중 가장 깊은 값 + 1).
@@ -408,6 +576,9 @@ namespace TowerDefense.UI
 
         private VisualElement BuildNodeElement(TechNodeData node)
         {
+            // 조직 허브 - 해금하는 노드가 아니라 폴더 같은 묶음. 조직색으로 채우고 이름만 표시함(클릭해도 아무 일 없음).
+            if (node.isHub) return BuildHubElement(node);
+
             bool unlocked = TechTreeManager.Instance.IsUnlocked(node.nodeId);
             bool available = !unlocked && TechTreeManager.Instance.ArePrerequisitesMet(node.nodeId);
             bool isCharacterNode = !string.IsNullOrEmpty(node.linkedCharacterId);
@@ -420,15 +591,40 @@ namespace TowerDefense.UI
             if (isCharacterNode) wrapper.AddToClassList("character-node");
 
             var hex = new HexagonVisual { FillColor = GetFillColor(unlocked, available) };
-            ApplyRingStyle(hex, isCharacterNode, isSearchMatch: false);
+            ApplyRingStyle(hex, node, isSearchMatch: false);
             wrapper.Add(hex);
             _nodeHexVisuals[node.nodeId] = hex;
 
-            var label = new Label(unlocked ? node.displayName : $"{node.displayName}\n({GetCostSymbolText(node)})");
+            string labelText = node.displayName;
+            if (!unlocked) labelText = $"{node.displayName}\n({GetCostSymbolText(node)})";
+            else if (isCharacterNode && CharacterLevelManager.Instance != null)
+            {
+                labelText = $"{node.displayName}\nLv {CharacterLevelManager.Instance.GetLevel(node.linkedCharacterId)}"; // 해금된 캐릭터 노드엔 현재 레벨 표시
+            }
+            var label = new Label(labelText);
             label.AddToClassList("tech-node-label");
             wrapper.Add(label);
 
             wrapper.RegisterCallback<ClickEvent>(_ => OnNodeClicked(node));
+
+            return wrapper;
+        }
+
+        private VisualElement BuildHubElement(TechNodeData hubNode)
+        {
+            var wrapper = new VisualElement();
+            wrapper.AddToClassList("tech-node");
+            wrapper.AddToClassList("tech-node-hub");
+
+            NodeTreeLineColors.TryGet(hubNode.hubLine, out var fill, out var ring);
+            var hex = new HexagonVisual { FillColor = fill, RingColor = ring, RingWidth = 4f };
+            wrapper.Add(hex);
+            _nodeHexVisuals[hubNode.nodeId] = hex;
+
+            var label = new Label(hubNode.displayName);
+            label.AddToClassList("tech-node-label");
+            label.AddToClassList("tech-node-hub-label");
+            wrapper.Add(label);
 
             return wrapper;
         }
@@ -439,17 +635,24 @@ namespace TowerDefense.UI
             return available ? AvailableFillColor : UnavailableFillColor;
         }
 
-        // 검색 일치가 캐릭터 노드 테두리보다 우선순위가 높음(더 눈에 띄어야 하니까).
-        private static void ApplyRingStyle(HexagonVisual hex, bool isCharacterNode, bool isSearchMatch)
+        // 기본 테두리: 허브 = 조직색 두껍게 / 캐릭터 노드 = 소속 조직색 / 스탯 노드 = 무색(테두리 없음).
+        // 검색 일치(노란 링)가 이 기본 테두리보다 우선순위가 높음(더 눈에 띄어야 하니까).
+        private static void ApplyRingStyle(HexagonVisual hex, TechNodeData node, bool isSearchMatch)
         {
             if (isSearchMatch)
             {
                 hex.RingColor = SearchMatchRingColor;
                 hex.RingWidth = 4f;
             }
-            else if (isCharacterNode)
+            else if (node.isHub && NodeTreeLineColors.TryGet(node.hubLine, out _, out var hubRing))
             {
-                hex.RingColor = CharacterNodeRingColor;
+                hex.RingColor = hubRing;
+                hex.RingWidth = 4f;
+            }
+            else if (!string.IsNullOrEmpty(node.linkedCharacterId))
+            {
+                // 무소속 3명도 노드 트리 라인(허브) 색을 따름 - 연결된 허브와 같은 색이어야 한눈에 묶여 보임.
+                hex.RingColor = NodeTreeLineColors.TryGet(node.hubLine, out _, out var ringColor) ? ringColor : CharacterNodeRingColor;
                 hex.RingWidth = 3f;
             }
             else
@@ -490,40 +693,24 @@ namespace TowerDefense.UI
             return $"골드 {node.cost}";
         }
 
+        // 노드를 누르면 상세창을 띄움 - 해금 여부(해금/취소), 해금된 캐릭터면 레벨업 여부와 변하는 수치를 거기서 결정함.
         private void OnNodeClicked(TechNodeData node)
         {
-            bool unlocked = TechTreeManager.Instance.IsUnlocked(node.nodeId);
-            if (unlocked)
-            {
-                Debug.Log($"[TechTree] {node.displayName} - 이미 해금됨 (더미, 실제 강화 효과 적용은 미구현)");
-                return;
-            }
-
-            if (!TechTreeManager.Instance.ArePrerequisitesMet(node.nodeId))
-            {
-                ToastController.Instance?.Show("선행 노드를 먼저 해금하세요");
-                return;
-            }
-
-            if (confirmDialog == null)
-            {
-                Debug.LogWarning("[TechTree] ConfirmDialog가 연결 안 돼있음 - 인스펙터에서 연결할 것.");
-                return;
-            }
-
-            confirmDialog.Open(
-                $"{node.displayName}을(를) {GetCostWordText(node)}(으)로 해금하시겠습니까?",
-                () =>
-                {
-                    bool success = TechTreeManager.Instance.TryUnlock(node.nodeId);
-                    if (!success)
-                    {
-                        ToastController.Instance?.Show("재화가 부족합니다");
-                    }
-                });
+            if (node.isHub) return; // 허브는 폴더 같은 묶음 - 해금/상세 없음
+            _detailPanel?.ShowNode(node);
         }
 
-        private void OnNodeUnlockedChanged(string nodeId) => BuildGrid();
+        private void OnNodeUnlockedChanged(string nodeId)
+        {
+            BuildGrid();
+            _detailPanel?.RefreshIfShowing(); // 방금 해금한 캐릭터 노드면 곧바로 레벨 화면으로 바뀜
+        }
+
+        private void OnCharacterLevelChanged(string characterId, int newLevel)
+        {
+            BuildGrid(); // 노드 라벨의 레벨 표시 갱신
+            _detailPanel?.RefreshIfShowing();
+        }
 
         private void OnCloseClicked() => PopupManager.Instance.RequestClose(this);
 
@@ -555,8 +742,7 @@ namespace TowerDefense.UI
                 bool isMatch = hasQuery && node.displayName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
                 element.EnableInClassList("search-dim", hasQuery && !isMatch);
 
-                bool isCharacterNode = !string.IsNullOrEmpty(node.linkedCharacterId);
-                ApplyRingStyle(hex, isCharacterNode, isMatch);
+                ApplyRingStyle(hex, node, isMatch);
             }
         }
 
@@ -569,12 +755,14 @@ namespace TowerDefense.UI
                 public readonly Vector2 From;
                 public readonly Vector2 To;
                 public readonly bool Active;
+                public readonly Color Tint; // 조직색 연결선(알파 0이면 기본 색 사용)
 
-                public Line(Vector2 from, Vector2 to, bool active)
+                public Line(Vector2 from, Vector2 to, bool active, Color tint = default)
                 {
                     From = from;
                     To = to;
                     Active = active;
+                    Tint = tint;
                 }
             }
 
@@ -604,7 +792,17 @@ namespace TowerDefense.UI
 
                 foreach (var line in Lines)
                 {
-                    painter.strokeColor = line.Active ? ActiveColor : InactiveColor;
+                    if (line.Tint.a > 0f)
+                    {
+                        // 조직색 선 - 해금된 쪽은 선명하게, 아직이면 반투명하게
+                        var tint = line.Tint;
+                        tint.a = line.Active ? 0.95f : 0.45f;
+                        painter.strokeColor = tint;
+                    }
+                    else
+                    {
+                        painter.strokeColor = line.Active ? ActiveColor : InactiveColor;
+                    }
                     painter.BeginPath();
                     painter.MoveTo(line.From);
                     painter.LineTo(line.To);
