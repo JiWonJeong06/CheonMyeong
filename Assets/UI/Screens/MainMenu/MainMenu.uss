@@ -1,0 +1,172 @@
+/* 메인 화면 배치 - 1920x1080 기준 기획 스케치를 퍼센트 좌표로 옮긴 것.
+   모든 요소는 root 기준 absolute라서 해상도(비율 16:9)가 바뀌어도 같은 배치를 유지함. */
+
+.main-root {
+    flex-grow: 1;
+    background-color: rgb(20, 20, 25);
+}
+
+/* 재화 (우상단) */
+.top-bar {
+    position: absolute;
+    left: 69.5%;
+    top: 5%;
+    width: 27.5%;
+    height: 5%;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.currency-item {
+    flex-direction: row;
+    align-items: center;
+    margin-left: 16px;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 4px 10px;
+}
+
+.currency-icon {
+    color: rgb(255, 210, 90);
+    margin-right: 6px;
+    -unity-font-style: bold;
+}
+
+.currency-value {
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+}
+
+/* 스케치에 없는 설정 버튼 - 좌상단에 작게 유지 */
+.settings-button {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    width: 72px;
+    height: 32px;
+}
+
+/* 공통 패널 */
+.panel {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
+}
+
+/* 덱 설정 및 노드 트리 (중앙 상단) */
+.deck-panel {
+    left: 33.3%;
+    top: 14.2%;
+    width: 34.8%;
+    height: 36%;
+    align-items: center;
+    justify-content: center;
+}
+
+.panel-title {
+    color: rgb(255, 255, 255);
+    font-size: 20px;
+    -unity-font-style: bold;
+    margin-bottom: 20px;
+}
+
+.deck-panel-buttons {
+    flex-direction: row;
+}
+
+.panel-button {
+    width: 140px;
+    height: 44px;
+}
+
+/* 상점 / 게시판은 박스 전체가 버튼 */
+.panel-button-big {
+    color: rgb(255, 255, 255);
+    font-size: 22px;
+    -unity-font-style: bold;
+    margin: 0;
+}
+
+.shop-panel {
+    left: 4.9%;
+    top: 45.6%;
+    width: 18.4%;
+    height: 27.5%;
+}
+
+.board-panel {
+    left: 77.6%;
+    top: 31.3%;
+    width: 18.9%;
+    height: 19.4%;
+}
+
+/* 덱 캐릭터 슬롯 (슬롯은 컨트롤러가 DeckManager.DeckSize만큼 코드로 생성) */
+.deck-slots {
+    position: absolute;
+    left: 32.2%;
+    top: 61.9%;
+    width: 33%;
+    height: 11%;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.deck-slot {
+    flex-grow: 1;
+    flex-basis: 0;
+    margin: 0 4px;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    align-items: center;
+    justify-content: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.deck-slot--empty {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.deck-slot-name {
+    color: rgb(255, 255, 255);
+    font-size: 14px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.deck-slots-label {
+    position: absolute;
+    left: 32.2%;
+    top: 76.5%;
+    width: 33%;
+    color: rgb(255, 255, 255);
+    font-size: 20px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+/* 시작 버튼 (우하단) */
+.play-button {
+    position: absolute;
+    left: 71.4%;
+    top: 68.3%;
+    width: 27.3%;
+    height: 15.5%;
+    font-size: 28px;
+    -unity-font-style: bold;
+    margin: 0;
+}
+
+.version-label {
+    position: absolute;
+    right: 12px;
+    bottom: 8px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 10px;
+}

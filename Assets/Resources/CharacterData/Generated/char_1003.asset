@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_1003
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 1003
+  characterId: char_1003
+  displayName: "\uCD5C\uC720\uC815"
+  faction: "\uCC9C\uBA85\uD68C"
+  description: 
+  weapon: "\uC870\uCD1D"
+  attackType: 1
+  isSupport: 0
+  mergeType: 0
+  targetPriority: 1
+  baseDamage: 111
+  attackInterval: 2
+  range: 6
+  starAttackPower: 42
+  starAttackInterval: 0
+  gaugePerHit: 30
+  killType: 2
+  gaugePerKill: 15
+  ultimateGauge: 350
+  skill:
+    name: "\uD5E4\uB4DC\uC0F7"
+    description: "n% \uD655\uB960\uB85C \uB300\uC0C1\uC5D0\uAC8C \uACF5\uACA9\uB825\uC758
+      m% \uB300\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4. (\uBCF4\uC2A4\uB294 m\uC758
+      \uC808\uBC18)"
+    parameters:
+    - key: headshotChancePercent
+      meaning: "\uD5E4\uB4DC\uC0F7 \uD655\uB960 n%"
+      values:
+      - 18
+      - 19
+      - 20
+      - 22
+      - 24
+    - key: headshotDamagePercent
+      meaning: "\uD5E4\uB4DC\uC0F7 \uD53C\uD574 \uACF5\uACA9\uB825 m% (\uBCF4\uC2A4\uB294
+        \uC808\uBC18)"
+      values:
+      - 350
+      - 370
+      - 400
+      - 440
+      - 500
+  ultimate:
+    name: "\uB36B"
+    description: "\uC0AC\uAC70\uB9AC \uB0B4\uC5D0 \uC788\uB294 \uAE38\uC5D0 \uB36B\uC744
+      n\uAC1C \uBFCC\uB9BD\uB2C8\uB2E4. \uC9C0\uB098\uAC04 \uC801\uC774 \uB36B\uC5D0
+      \uAC78\uB9AC\uBA74, 2.5\uCD08 \uB3D9\uC548 \uC774\uB3D9\uC774 \uC81C\uD55C
+      \uB429\uB2C8\uB2E4. \uB36B\uC5D0 \uAC78\uB9B0 \uC801\uC5D0\uAC8C \uC6B0\uC120\uC73C\uB85C
+      \uACF5\uACA9\uD558\uBA70, \uB36B\uC740 100% \uD655\uB960\uB85C \uB300\uC0C1\uC5D0\uAC8C
+      \"\uD5E4\uB4DC\uC0F7\"\uC744 \uBD80\uC5EC\uD569\uB2C8\uB2E4."
+    parameters:
+    - key: trapCount
+      meaning: "\uB36B n\uAC1C (2.5\uCD08 \uC18D\uBC15, \uAC78\uB9AC\uBA74 \uD655\uC815
+        \uD5E4\uB4DC\uC0F7)"
+      values:
+      - 3
+      - 4
+      - 5
+      - 6
+      - 8
+  isStarter: 0
+  unlockCost: 100
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

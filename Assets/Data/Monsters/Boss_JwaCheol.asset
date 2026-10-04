@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d401074f7c3b1347b988bec0c40b7d3, type: 3}
+  m_Name: Boss_JwaCheol
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Monsters.MonsterDataSO
+  monsterId: boss_jwa_cheol
+  displayName: "\uC88C\uCCA0"
+  maxHp: 10
+  hpMultiplier: 0.75
+  moveSpeedMultiplier: 1
+  moveSpeed: 0.5
+  spawnWeight: 0
+  isBoss: 1
+  goldReward: 5
+  killSp: 450
+  killSpPerWave: 150
+  damageToBase: 2
+  prefab: {fileID: 5542756559366482663, guid: 94e4f9cc67247f248b40b7fee4bf5d76, type: 3}
+  iconSprite: {fileID: 0}
+  abilityName: "\uC6B4\uC11D"
+  abilityDescription: "\uC6B4\uC11D\uC5D0 \uB9DE\uC740 \uCE90\uB9AD\uD130 \uC81C\uAC70"

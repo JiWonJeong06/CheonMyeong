@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Common/Common.uss?fileID=7433441132597879392&amp;guid=dae192441ed51e44bafe4c47767337eb&amp;type=3#Common"/>
+    <ui:VisualElement name="toast-root" class="toast-root">
+        <ui:Label name="toast-label" text="" class="toast-label"/>
+    </ui:VisualElement>
+</ui:UXML>

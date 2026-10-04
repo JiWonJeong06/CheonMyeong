@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_2003
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 2003
+  characterId: char_2003
+  displayName: "\uC2E0\uC138\uD5CC"
+  faction: "\uBE44\uC120\uCCAD"
+  description: 
+  weapon: "\uBB3C"
+  attackType: 1
+  isSupport: 0
+  mergeType: 0
+  targetPriority: 0
+  baseDamage: 113
+  attackInterval: 1.4
+  range: 4
+  starAttackPower: 42
+  starAttackInterval: 0
+  gaugePerHit: 21
+  killType: 0
+  gaugePerKill: 10
+  ultimateGauge: 600
+  skill:
+    name: "\uC0B0\uC131 \uBE44"
+    description: "(n\uCD08\uB9C8\uB2E4) \uC0C1\uB300 \uD544\uB4DC\uC5D0 \uC0B0\uC131\uBE44\uB97C
+      \uB0B4\uB824 \uC0C1\uB300 \uBC84\uD504\uD615 \uCE90\uB9AD\uD130\uC758 \uBC84\uD504\uB97C
+      8\uCD08 \uB3D9\uC548 \uBB34\uD6A8\uD654\uD569\uB2C8\uB2E4."
+    parameters:
+    - key: acidRainCooldownSeconds
+      meaning: "\uC0B0\uC131 \uBE44 n\uCD08\uB9C8\uB2E4 (\uC0C1\uB300 \uBC84\uD504\uD615
+        \uBC84\uD504 8\uCD08 \uBB34\uD6A8)"
+      values:
+      - 70
+      - 67
+      - 64
+      - 58
+      - 50
+  ultimate:
+    name: "\uC218\uB8E1\uC9C4"
+    description: "\uC218\uB8E1\uC774 \uACBD\uB85C\uC5D0 \uB530\uB77C \uC9C0\uB098\uAC11\uB2C8\uB2E4.
+      \uB300\uC0C1\uC758 \uBCF4\uD638\uB9C9\uC744 \uD30C\uAD34\uD558\uACE0, \uACF5\uACA9\uB825\uC758
+      n% \uD53C\uD574\uB97C \uC785\uB2C8\uB2E4"
+    parameters:
+    - key: dragonDamagePercent
+      meaning: "\uC218\uB8E1\uC9C4 \uACF5\uACA9\uB825 n% (\uBCF4\uD638\uB9C9 \uD30C\uAD34)"
+      values:
+      - 150
+      - 170
+      - 195
+      - 240
+      - 300
+  isStarter: 0
+  unlockCost: 100
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

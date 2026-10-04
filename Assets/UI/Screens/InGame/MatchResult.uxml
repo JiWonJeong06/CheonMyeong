@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Common/Common.uss?fileID=7433441132597879392&amp;guid=dae192441ed51e44bafe4c47767337eb&amp;type=3#Common"/>
+    <ui:VisualElement name="popup-root" class="popup-root">
+        <ui:VisualElement class="popup-box">
+            <ui:Label name="result-label" text="승리!" class="popup-title"/>
+            <ui:VisualElement class="button-row">
+                <ui:Button name="confirm-button" text="메인 메뉴로" class="app-button"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

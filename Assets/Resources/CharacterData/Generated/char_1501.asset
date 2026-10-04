@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_1501
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 1501
+  characterId: char_1501
+  displayName: "\uC784\uC131\uC7AC"
+  faction: "\uD751\uC5F0\uD68C"
+  description: 
+  weapon: "\uC30D\uC808\uACE4"
+  attackType: 0
+  isSupport: 0
+  mergeType: 0
+  targetPriority: 0
+  baseDamage: 109
+  attackInterval: 1
+  range: 1
+  starAttackPower: 41
+  starAttackInterval: 0
+  gaugePerHit: 15
+  killType: 0
+  gaugePerKill: 10
+  ultimateGauge: 450
+  skill:
+    name: "\uC30D\uC808\uACE4"
+    description: "(n\uCD08\uB9C8\uB2E4) \uB79C\uB364\uC73C\uB85C \uC0C1\uB300 \uCE90\uB9AD\uD130
+      1\uBA85\uC5D0\uAC8C \uC30D\uC808\uACE4\uC744 \uB358\uC9D1\uB2C8\uB2E4. (10\uCD08
+      \uB3D9\uC548) \uBC1C\uC774 \uBB36\uC778 \uC0C1\uB300 \uCE90\uB9AD\uD130\uB294
+      \uAE30\uBCF8 \uACF5\uACA9\xB7\uC2A4\uD0AC\xB7\uAD81\uADF9\uAE30\uB97C \uC0AC\uC6A9\uD558\uC9C0
+      \uBABB\uD558\uBA70, \uC30D\uC808\uACE4\uC744 \uC783\uC740 \uC784\uC131\uC7AC\uB294
+      \uACF5\uACA9\uB825\uC774 40% \uAC10\uC18C\uD569\uB2C8\uB2E4."
+    parameters:
+    - key: throwCooldownSeconds
+      meaning: "\uC30D\uC808\uACE4 n\uCD08\uB9C8\uB2E4 (\uC0C1\uB300 1\uBA85 10\uCD08
+        \uD589\uB3D9 \uBD88\uAC00, \uC790\uC2E0 \uACF5\uACA9\uB825 -40%)"
+      values:
+      - 40
+      - 39
+      - 37
+      - 34
+      - 30
+  ultimate:
+    name: "\uCDA9\uC804"
+    description: "(9\uCD08 \uB3D9\uC548) \uC801\uC5D0\uAC8C \uACB0\uC815\uD0C0\uB97C
+      \uD558\uBA74 \uC601\uAD6C\uC801\uC73C\uB85C \uACF5\uACA9\uB825 +n\uC744 \uC5BB\uC2B5\uB2C8\uB2E4.
+      (\uD569\uC131 \uC2DC \uB354 \uB192\uC740 n\uAC12\uC774 \uC801\uC6A9 \uB429\uB2C8\uB2E4.)"
+    parameters:
+    - key: killAttackBonus
+      meaning: "9\uCD08 \uB3D9\uC548 \uACB0\uC815\uD0C0\uB2F9 \uC601\uAD6C \uACF5\uACA9\uB825
+        +n (\uD569\uC131 \uC2DC \uB192\uC740 \uAC12)"
+      values:
+      - 1
+      - 1.3
+      - 1.6
+      - 2.2
+      - 3
+  isStarter: 0
+  unlockCost: 100
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

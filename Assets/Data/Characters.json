@@ -1,0 +1,1121 @@
+{
+  "version": "2026-10-04f",
+  "source": "천명_통합.xlsx / 캐릭터 스탯 + 스킬 밸런싱 (캐릭터 Lv1 기준)",
+  "startSkillLevel": 1,
+  "maxSkillLevel": 5,
+  "maxStar": 5,
+  "supportUltimateCharge": {
+    "perSecond": 10,
+    "perSkillUsePerCooldownSecond": 1.5,
+    "perAssistKill": 1,
+    "assistMaxPerSecond": 5,
+    "assistWindowSeconds": 5
+  },
+  "characters": [
+    {
+      "code": 1000,
+      "name": "이유라",
+      "weapon": "칼",
+      "attackType": "Melee",
+      "isSupport": false,
+      "attackPower": 121,
+      "attackInterval": 1.2,
+      "range": 1,
+      "targetPriority": "Front",
+      "mergeType": "Speed",
+      "starAttackPower": 22,
+      "starAttackInterval": -0.092,
+      "gaugePerHit": 18,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 550,
+      "skill": {
+        "name": "처단",
+        "description": "기본 지속 효과 : 공격력이 n% 증가합니다.",
+        "parameters": [
+          {
+            "key": "attackBonusPercent",
+            "meaning": "기본 지속: 공격력 n% 증가",
+            "values": [8, 10, 12, 15, 20]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "필사즉생",
+        "description": "(12초 동안) 이유라가 타격한 대상의 체력이 n% 이하이면 처형(즉사)합니다. (보스 제외)",
+        "parameters": [
+          {
+            "key": "executeHpPercent",
+            "meaning": "처형 체력 n% (보스 제외, 12초)",
+            "values": [8, 10, 12, 15, 20]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1001,
+      "name": "박재혁",
+      "weapon": "단검/우산",
+      "attackType": "Melee",
+      "isSupport": false,
+      "attackPower": 94,
+      "attackInterval": 0.9,
+      "range": 1,
+      "targetPriority": "Front",
+      "mergeType": "Speed",
+      "starAttackPower": 17,
+      "starAttackInterval": -0.069,
+      "gaugePerHit": 14,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 550,
+      "skill": {
+        "name": "단검",
+        "description": "기본 지속 효과 : 공격속도가 n% 증가합니다. \"무기 교체\" 중에는 기본 지속 효과를 잃습니다.",
+        "parameters": [
+          {
+            "key": "attackSpeedPercent",
+            "meaning": "기본 지속: 공격속도 n% 증가 (무기 교체 중에는 없음)",
+            "values": [10, 12, 15, 19, 25]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "무기교체",
+        "description": "(11초 동안) 우산(장검)을 이용합니다. 사거리가 +1 만큼 늘어나고, 공격력 n% 증가합니다.",
+        "parameters": [
+          {
+            "key": "attackBonusPercent",
+            "meaning": "11초 동안 공격력 n% 증가 (사거리 +1)",
+            "values": [100, 115, 130, 160, 200]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1002,
+      "name": "손강재",
+      "weapon": "활",
+      "attackType": "Ranged",
+      "isSupport": false,
+      "attackPower": 86,
+      "attackInterval": 1,
+      "range": 5,
+      "targetPriority": "Front",
+      "mergeType": "Speed",
+      "starAttackPower": 16,
+      "starAttackInterval": -0.077,
+      "gaugePerHit": 15,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 400,
+      "skill": {
+        "name": "명사수",
+        "description": "기본 공격 시, 대상을 경로 전체 길이의 n%만큼 뒤로 밀어냅니다.",
+        "parameters": [
+          {
+            "key": "knockbackPathPercent",
+            "meaning": "기본 공격 시 경로 전체 길이의 n%만큼 밀어냄",
+            "values": [5, 5.5, 6.5, 8, 10]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "연속 공격",
+        "description": "(15초 동안) 맨 앞 3명을 공격하고, 공격속도가 n% 증가합니다.",
+        "parameters": [
+          {
+            "key": "attackSpeedPercent",
+            "meaning": "15초 동안 공격속도 n% 증가 (맨 앞 3명 동시 공격)",
+            "values": [20, 24, 29, 38, 50]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1003,
+      "name": "최유정",
+      "weapon": "조총",
+      "attackType": "Ranged",
+      "isSupport": false,
+      "attackPower": 111,
+      "attackInterval": 2,
+      "range": 6,
+      "targetPriority": "HighestHp",
+      "mergeType": "Power",
+      "starAttackPower": 42,
+      "starAttackInterval": 0,
+      "gaugePerHit": 30,
+      "killType": "Sniper",
+      "gaugePerKill": 15,
+      "ultimateGauge": 350,
+      "skill": {
+        "name": "헤드샷",
+        "description": "n% 확률로 대상에게 공격력의 m% 대미지를 줍니다. (보스는 m의 절반)",
+        "parameters": [
+          {
+            "key": "headshotChancePercent",
+            "meaning": "헤드샷 확률 n%",
+            "values": [18, 19, 20, 22, 24]
+          },
+          {
+            "key": "headshotDamagePercent",
+            "meaning": "헤드샷 피해 공격력 m% (보스는 절반)",
+            "values": [350, 370, 400, 440, 500]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "덫",
+        "description": "사거리 내에 있는 길에 덫을 n개 뿌립니다. 지나간 적이 덫에 걸리면, 2.5초 동안 이동이 제한 됩니다. 덫에 걸린 적에게 우선으로 공격하며, 덫은 100% 확률로 대상에게 \"헤드샷\"을 부여합니다.",
+        "parameters": [
+          {
+            "key": "trapCount",
+            "meaning": "덫 n개 (2.5초 속박, 걸리면 확정 헤드샷)",
+            "values": [3, 4, 5, 6, 8]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1004,
+      "name": "하영",
+      "weapon": "칼",
+      "attackType": "Melee",
+      "isSupport": false,
+      "attackPower": 109,
+      "attackInterval": 1.5,
+      "range": 1,
+      "targetPriority": "Front",
+      "mergeType": "Power",
+      "starAttackPower": 41,
+      "starAttackInterval": 0,
+      "gaugePerHit": 12,
+      "killType": "Normal",
+      "gaugePerKill": 5,
+      "ultimateGauge": 77,
+      "skill": {
+        "name": "혼오의 깃",
+        "description": "타격 시 1의 '까마귀' 스택을 쌓고, n% 확률로 1스택을 더 쌓는다. (최대 15스택)",
+        "parameters": [
+          {
+            "key": "extraStackChancePercent",
+            "meaning": "타격 시 스택 1 + n% 확률로 1 더 (최대 15)",
+            "values": [15, 20, 30, 40, 60]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "혼오의 일격",
+        "description": "맵 전체에서 까마귀 스택이 적용된 모든 몬스터에게 (까마귀 스택 × 공격력의 n%) 대미지를 넣는 참격을 발사한다. 모든 스택을 잃는다.",
+        "parameters": [
+          {
+            "key": "stackDamagePercent",
+            "meaning": "스택당 공격력 n% 참격 (맵 전체)",
+            "values": [50, 53, 56, 62, 70]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1005,
+      "name": "홍훈",
+      "weapon": "전기",
+      "attackType": "Ranged",
+      "isSupport": false,
+      "attackPower": 84,
+      "attackInterval": 1.2,
+      "range": 3,
+      "targetPriority": "Front",
+      "mergeType": "Speed",
+      "starAttackPower": 15,
+      "starAttackInterval": -0.092,
+      "gaugePerHit": 18,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 800,
+      "skill": {
+        "name": "번개",
+        "description": "8번째 공격마다 n초 기절을 부여합니다.",
+        "parameters": [
+          {
+            "key": "stunSeconds",
+            "meaning": "8번째 공격마다 n초 기절",
+            "values": [1.5, 1.6, 1.7, 1.8, 2]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "천둥의 신",
+        "description": "필드 전체에 공격력의 (150 + n)% 피해를 3번 입히고 1.5초 동안 기절을 부여한다.",
+        "parameters": [
+          {
+            "key": "extraDamagePercent",
+            "meaning": "공격력 (150 + n)% × 3회 + 1.5초 기절",
+            "values": [60, 85, 115, 165, 240]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1500,
+      "name": "김도현",
+      "weapon": "권총",
+      "attackType": "Ranged",
+      "isSupport": false,
+      "attackPower": 76,
+      "attackInterval": 0.6,
+      "range": 4,
+      "targetPriority": "Front",
+      "mergeType": "Power",
+      "starAttackPower": 29,
+      "starAttackInterval": 0,
+      "gaugePerHit": 9,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 500,
+      "skill": {
+        "name": "암흑 총알",
+        "description": "7발마다 m초 동안 재장전합니다. 7번째 공격은 공격력의 n% 추가 피해를 입힙니다.",
+        "parameters": [
+          {
+            "key": "seventhShotBonusPercent",
+            "meaning": "7번째 공격 추가 피해 공격력 n%",
+            "values": [40, 50, 60, 75, 100]
+          },
+          {
+            "key": "reloadSeconds",
+            "meaning": "7발마다 재장전 m초 (짧을수록 좋음)",
+            "values": [1.75, 1.7, 1.6, 1.45, 1.25]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "어둠의 쌍권총",
+        "description": "(n초 동안) 모든 공격이 7번째 공격 효과(추가 피해)를 받고, 사거리가 +2 증가합니다. 재장전을 하지 않습니다.",
+        "parameters": [
+          {
+            "key": "durationSeconds",
+            "meaning": "n초 동안 모든 공격이 7번째 공격 효과 + 사거리 +2, 재장전 없음",
+            "values": [12, 12.5, 13, 14.5, 16]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1501,
+      "name": "임성재",
+      "weapon": "쌍절곤",
+      "attackType": "Melee",
+      "isSupport": false,
+      "attackPower": 109,
+      "attackInterval": 1,
+      "range": 1,
+      "targetPriority": "Front",
+      "mergeType": "Power",
+      "starAttackPower": 41,
+      "starAttackInterval": 0,
+      "gaugePerHit": 15,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 450,
+      "skill": {
+        "name": "쌍절곤",
+        "description": "(n초마다) 랜덤으로 상대 캐릭터 1명에게 쌍절곤을 던집니다. (10초 동안) 발이 묶인 상대 캐릭터는 기본 공격·스킬·궁극기를 사용하지 못하며, 쌍절곤을 잃은 임성재는 공격력이 40% 감소합니다.",
+        "parameters": [
+          {
+            "key": "throwCooldownSeconds",
+            "meaning": "쌍절곤 n초마다 (상대 1명 10초 행동 불가, 자신 공격력 -40%)",
+            "values": [40, 39, 37, 34, 30]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "충전",
+        "description": "(9초 동안) 적에게 결정타를 하면 영구적으로 공격력 +n을 얻습니다. (합성 시 더 높은 n값이 적용 됩니다.)",
+        "parameters": [
+          {
+            "key": "killAttackBonus",
+            "meaning": "9초 동안 결정타당 영구 공격력 +n (합성 시 높은 값)",
+            "values": [1, 1.3, 1.6, 2.2, 3]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1502,
+      "name": "서윤아",
+      "weapon": "마법",
+      "attackType": "Ranged",
+      "isSupport": true,
+      "attackPower": 99,
+      "attackInterval": 1.3,
+      "range": 5,
+      "targetPriority": "Front",
+      "mergeType": "Speed",
+      "starAttackPower": 18,
+      "starAttackInterval": -0.1,
+      "gaugePerHit": 0,
+      "killType": "Area",
+      "gaugePerKill": 5,
+      "ultimateGauge": 600,
+      "skill": {
+        "name": "저주",
+        "description": "(n초마다) 랜덤으로 상대 캐릭터 1명에게 저주를 내립니다. 저주는 상대 캐릭터의 현재 궁극기 게이지를 50% 감소시킵니다. 본인은 공격하지 못하는 버프형 캐릭터입니다.",
+        "parameters": [
+          {
+            "key": "curseCooldownSeconds",
+            "meaning": "저주 n초마다 (상대 1명 궁극기 게이지 -50%)",
+            "values": [45, 44, 42, 39, 35]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "백야",
+        "description": "(10초 동안) 사거리 내 적이 받는 모든 피해가 n% 증가 한다.",
+        "parameters": [
+          {
+            "key": "damageTakenPercent",
+            "meaning": "10초 동안 사거리 내 적이 받는 피해 n% 증가",
+            "values": [10, 12, 15, 19, 25]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2000,
+      "name": "윤재훈",
+      "weapon": "지팡이(나무)",
+      "attackType": "Ranged",
+      "isSupport": true,
+      "attackPower": 81,
+      "attackInterval": 1.5,
+      "range": 5,
+      "targetPriority": "Front",
+      "mergeType": "Power",
+      "starAttackPower": 30,
+      "starAttackInterval": 0,
+      "gaugePerHit": 0,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 600,
+      "skill": {
+        "name": "온전한 마음",
+        "description": "(40초마다) 10초간 상대 캐릭터 전체의 공격속도를 n% 감소시킵니다. 본인은 공격하지 못하는 버프형 캐릭터입니다.",
+        "parameters": [
+          {
+            "key": "enemyAttackSpeedDownPercent",
+            "meaning": "40초마다 10초간 상대 전체 공속 n% 감소",
+            "values": [20, 21, 23, 26, 30]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "세계수의 축복",
+        "description": "(6초 동안) 사거리 내 캐릭터에게 공격속도 30%와, 윤재훈 공격력의 n%만큼 추가 공격력을 부여합니다.",
+        "parameters": [
+          {
+            "key": "attackSharePercent",
+            "meaning": "6초 동안 사거리 내 아군에 윤재훈 공격력의 n% 부여 (+ 공속 30%)",
+            "values": [10, 13, 16, 22, 30]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2001,
+      "name": "송서현",
+      "weapon": "기창",
+      "attackType": "Melee",
+      "isSupport": false,
+      "attackPower": 119,
+      "attackInterval": 1.3,
+      "range": 1.5,
+      "targetPriority": "LowestHp",
+      "mergeType": "Power",
+      "starAttackPower": 45,
+      "starAttackInterval": 0,
+      "gaugePerHit": 20,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 700,
+      "skill": {
+        "name": "돌격",
+        "description": "처음 공격한 적에게 공격력의 (200 + n)% 피해를 입힙니다.",
+        "parameters": [
+          {
+            "key": "firstHitBonusPercent",
+            "meaning": "첫 타 공격력 (200 + n)%",
+            "values": [90, 100, 120, 145, 180]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "여포의 난",
+        "description": "말을 타고, 경로를 따라 돌진합니다. 경로 위 모든 적은 0.5초 동안 기절이 걸리며,공격력의 n% 피해를 입힙니다.",
+        "parameters": [
+          {
+            "key": "dashDamagePercent",
+            "meaning": "돌진 경로 공격력 n% (+ 0.5초 기절)",
+            "values": [150, 170, 195, 240, 300]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2002,
+      "name": "한민성",
+      "weapon": "당파",
+      "attackType": "Melee",
+      "isSupport": false,
+      "attackPower": 134,
+      "attackInterval": 1.4,
+      "range": 1.5,
+      "targetPriority": "HighestHp",
+      "mergeType": "Power",
+      "starAttackPower": 50,
+      "starAttackInterval": 0,
+      "gaugePerHit": 21,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 800,
+      "skill": {
+        "name": "너가 나보다 강해?",
+        "description": "대형몬스터 및 보스에게 주는 피해가 n% 증가합니다.",
+        "parameters": [
+          {
+            "key": "largeBossDamagePercent",
+            "meaning": "대형·보스 피해 n% 증가",
+            "values": [25, 29, 36, 46, 60]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "병사들아 도움요청!",
+        "description": "(10초 동안) 사거리 내 병사를 2명을 소환합니다. 병사는 소환자의 공격력 n%를 물려 받으며, 패시브도 같이 적용 됩니다.",
+        "parameters": [
+          {
+            "key": "soldierAttackPercent",
+            "meaning": "병사 2명이 공격력 n% 물려받음 (10초)",
+            "values": [60, 65, 72, 84, 100]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2003,
+      "name": "신세헌",
+      "weapon": "물",
+      "attackType": "Ranged",
+      "isSupport": false,
+      "attackPower": 113,
+      "attackInterval": 1.4,
+      "range": 4,
+      "targetPriority": "Front",
+      "mergeType": "Power",
+      "starAttackPower": 42,
+      "starAttackInterval": 0,
+      "gaugePerHit": 21,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 600,
+      "skill": {
+        "name": "산성 비",
+        "description": "(n초마다) 상대 필드에 산성비를 내려 상대 버프형 캐릭터의 버프를 8초 동안 무효화합니다.",
+        "parameters": [
+          {
+            "key": "acidRainCooldownSeconds",
+            "meaning": "산성 비 n초마다 (상대 버프형 버프 8초 무효)",
+            "values": [70, 67, 64, 58, 50]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "수룡진",
+        "description": "수룡이 경로에 따라 지나갑니다. 대상의 보호막을 파괴하고, 공격력의 n% 피해를 입니다",
+        "parameters": [
+          {
+            "key": "dragonDamagePercent",
+            "meaning": "수룡진 공격력 n% (보호막 파괴)",
+            "values": [150, 170, 195, 240, 300]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2500,
+      "name": "박성훈",
+      "weapon": "철퇴",
+      "attackType": "Melee",
+      "isSupport": false,
+      "attackPower": 161,
+      "attackInterval": 1.4,
+      "range": 1,
+      "targetPriority": "Front",
+      "mergeType": "Speed",
+      "starAttackPower": 29,
+      "starAttackInterval": -0.107,
+      "gaugePerHit": 21,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 650,
+      "skill": {
+        "name": "기절 강타",
+        "description": "n% 확률로 기본 공격이 1.75초 동안 기절이 부여 됩니다.",
+        "parameters": [
+          {
+            "key": "stunChancePercent",
+            "meaning": "기본 공격 n% 확률로 1.75초 기절",
+            "values": [5, 6, 7, 9, 12]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "주작의 춤",
+        "description": "맵을 가로지르는 주작을 소환, 공격력의 n% 피해를 입힌다. 화상이 부여 됩니다. [화상: 3초 동안 초당 몬스터 최대 체력의 3% 감소. 보스는 화상 면역]",
+        "parameters": [
+          {
+            "key": "phoenixDamagePercent",
+            "meaning": "주작 공격력 n% + 화상 (보스 면역)",
+            "values": [150, 170, 195, 240, 300]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2501,
+      "name": "진혜영",
+      "weapon": "붓",
+      "attackType": "Melee",
+      "isSupport": true,
+      "attackPower": 97,
+      "attackInterval": 1.2,
+      "range": 1,
+      "targetPriority": "Front",
+      "mergeType": "Power",
+      "starAttackPower": 36,
+      "starAttackInterval": 0,
+      "gaugePerHit": 0,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 320,
+      "skill": {
+        "name": "먹",
+        "description": "먹을 던져 사거리 내 랜덤 위치에 반경 1칸 먹 장판을 만듭니다. 장판은 m초 동안 유지되며, 위의 몬스터는 n% 속도 저하. 장판이 사라진 뒤 k초가 지나면 다시 던집니다. 본인은 공격하지 못하는 버프형 캐릭터입니다.",
+        "parameters": [
+          {
+            "key": "inkSlowPercent",
+            "meaning": "먹 장판 감속 n% (반경 1칸, 3초)",
+            "values": [8, 10, 12, 15, 20]
+          },
+          {
+            "key": "inkDurationSeconds",
+            "meaning": "먹 장판 유지 m초",
+            "values": [3, 3.1, 3.3, 3.6, 4]
+          },
+          {
+            "key": "inkCooldownSeconds",
+            "meaning": "장판이 사라진 뒤 k초 후 다시 던짐 (짧을수록 좋음)",
+            "values": [3, 2.9, 2.7, 2.4, 2]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "붓",
+        "description": "(10초 동안)상대 필드에 추가 이속 n% 부여합니다. (중첩 가능, 최대 30%)",
+        "parameters": [
+          {
+            "key": "enemyMoveSpeedPercent",
+            "meaning": "10초 동안 상대 필드 이속 n% 증가 (중첩, 최대 30%)",
+            "values": [5, 6.5, 8, 11, 15]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2502,
+      "name": "정다희",
+      "weapon": "표창",
+      "attackType": "Ranged",
+      "isSupport": false,
+      "attackPower": 80,
+      "attackInterval": 1.2,
+      "range": 3,
+      "targetPriority": "Front",
+      "mergeType": "Speed",
+      "starAttackPower": 15,
+      "starAttackInterval": -0.092,
+      "gaugePerHit": 18,
+      "killType": "Area",
+      "gaugePerKill": 5,
+      "ultimateGauge": 200,
+      "skill": {
+        "name": "표창",
+        "description": "일자로 날아가는 3개의 표창을 던집니다. (표창 공격력의 n%)",
+        "parameters": [
+          {
+            "key": "shurikenDamagePercent",
+            "meaning": "표창 3개, 개당 공격력 n%",
+            "values": [50, 53, 56, 62, 70]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "부채꼴",
+        "description": "(11초 동안) 부채꼴로 날아가는 6개의 표창을 던집니다. (표창 공격력 n%)",
+        "parameters": [
+          {
+            "key": "fanShurikenDamagePercent",
+            "meaning": "11초 동안 표창 6개 부채꼴, 개당 공격력 n%",
+            "values": [100, 115, 130, 160, 200]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2503,
+      "name": "남궁진",
+      "weapon": "게베어 1871",
+      "attackType": "Ranged",
+      "isSupport": false,
+      "attackPower": 187,
+      "attackInterval": 2.2,
+      "range": 6,
+      "targetPriority": "HighestHp",
+      "mergeType": "Speed",
+      "starAttackPower": 34,
+      "starAttackInterval": -0.169,
+      "gaugePerHit": 33,
+      "killType": "Sniper",
+      "gaugePerKill": 15,
+      "ultimateGauge": 500,
+      "skill": {
+        "name": "눈썰미",
+        "description": "모든 원거리 캐릭터의 사거리가 +1, 공격속도가 n% 증가합니다. (남궁진 본인은 제외. 필드에 여러 명이면 가장 강한 남궁진 1명만 적용)",
+        "parameters": [
+          {
+            "key": "auraAttackSpeedPercent",
+            "meaning": "원거리 아군 사거리 +1, 공속 n% (본인 제외, 가장 강한 1명만)",
+            "values": [3, 4, 5, 7, 10]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "암살 지령",
+        "description": "필드 내 가장 높은 적 1명을 저격 하여, 공격력 n% 피해를 입힙니다.( 보스 (n*0.5) % )",
+        "parameters": [
+          {
+            "key": "snipeDamagePercent",
+            "meaning": "가장 높은 적 저격 공격력 n% (보스는 절반)",
+            "values": [800, 900, 1050, 1280, 1600]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2504,
+      "name": "홍한",
+      "weapon": "주먹",
+      "attackType": "Melee",
+      "isSupport": false,
+      "attackPower": 67,
+      "attackInterval": 0.7,
+      "range": 1,
+      "targetPriority": "Front",
+      "mergeType": "Speed",
+      "starAttackPower": 12,
+      "starAttackInterval": -0.054,
+      "gaugePerHit": 11,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 450,
+      "skill": {
+        "name": "연타",
+        "description": "공격할 때 마다 공격속도가 3% 증가합니다. (최대 n중첩, 3초간 공격을 하지 않으면 초기화)",
+        "parameters": [
+          {
+            "key": "maxStacks",
+            "meaning": "공격마다 공속 3%, 최대 n중첩",
+            "values": [8, 10, 12, 15, 20]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "무골권",
+        "description": "(n초 동안) 공격속도가 100% 증가 하고, 두 번 공격 합니다.",
+        "parameters": [
+          {
+            "key": "durationSeconds",
+            "meaning": "n초 동안 공속 100% + 2회 공격",
+            "values": [5, 5.6, 6.5, 8, 10]
+          }
+        ]
+      }
+    },
+    {
+      "code": 3000,
+      "name": "김형욱",
+      "weapon": "도끼",
+      "attackType": "Melee",
+      "isSupport": false,
+      "attackPower": 147,
+      "attackInterval": 1.6,
+      "range": 1,
+      "targetPriority": "Front",
+      "mergeType": "Speed",
+      "starAttackPower": 27,
+      "starAttackInterval": -0.123,
+      "gaugePerHit": 24,
+      "killType": "Area",
+      "gaugePerKill": 5,
+      "ultimateGauge": 300,
+      "skill": {
+        "name": "내려찍기",
+        "description": "공격을 할 때마다, 주변 적에게 공격력의 n% 피해를 입힙니다.",
+        "parameters": [
+          {
+            "key": "splashDamagePercent",
+            "meaning": "주변 적 공격력 n%",
+            "values": [25, 28, 33, 40, 50]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "불도끼",
+        "description": "(8초 동안) 공격 시 화상을 부여합니다. 강화 시 화상 효과가 강화됩니다. [화상: 3초 동안 초당 몬스터 최대 체력의 n% 감소. 보스는 화상 면역]",
+        "parameters": [
+          {
+            "key": "burnPercentPerSec",
+            "meaning": "8초 동안 화상: 3초간 초당 최대 체력 n% (보스 면역)",
+            "values": [1.5, 1.8, 2.3, 3, 4]
+          }
+        ]
+      }
+    },
+    {
+      "code": 3001,
+      "name": "전민재",
+      "weapon": "방패",
+      "attackType": "Ranged",
+      "isSupport": false,
+      "attackPower": 100,
+      "attackInterval": 1.8,
+      "range": 3,
+      "targetPriority": "Front",
+      "mergeType": "Speed",
+      "starAttackPower": 18,
+      "starAttackInterval": -0.138,
+      "gaugePerHit": 27,
+      "killType": "Area",
+      "gaugePerKill": 5,
+      "ultimateGauge": 200,
+      "skill": {
+        "name": "부메랑 방패",
+        "description": "방패를 던져 적을 공격합니다. 공격력의 n% 피해를 입히고, 돌아오는 피해는 (n*0.7)% 입힙니다.",
+        "parameters": [
+          {
+            "key": "boomerangDamagePercent",
+            "meaning": "부메랑 공격력 n% (돌아올 때 × 0.7)",
+            "values": [90, 95, 102, 114, 130]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "방패",
+        "description": "(n초 동안) 사거리 내 경로에 방패 3개를 소환해 길을 막습니다. 방패는 체력이 없고 시간이 지나면 사라지며, 보스도 막힙니다.",
+        "parameters": [
+          {
+            "key": "blockSeconds",
+            "meaning": "방패 3개로 길 막기 n초 (보스도 막힘)",
+            "values": [2, 2.2, 2.5, 2.9, 3.5]
+          }
+        ]
+      }
+    },
+    {
+      "code": 3002,
+      "name": "유하린",
+      "weapon": "거울",
+      "attackType": "Ranged",
+      "isSupport": true,
+      "attackPower": 95,
+      "attackInterval": 1.4,
+      "range": 5,
+      "targetPriority": "Front",
+      "mergeType": "Power",
+      "starAttackPower": 36,
+      "starAttackInterval": 0,
+      "gaugePerHit": 0,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 630,
+      "skill": {
+        "name": "불완전 보호",
+        "description": "n초마다 랜덤한 아군 1명에게 보호막 부여 (중첩 X). 보호막은 보스·상대 스킬 효과(운석, 사슬, 조작, 암살 등)를 1회 무효화합니다. 본인은 소환 시 보호막이 부여됩니다. 본인은 공격하지 못하는 버프형 캐릭터 입니다.",
+        "parameters": [
+          {
+            "key": "shieldIntervalSeconds",
+            "meaning": "n초마다 아군 1명 보호막 (짧을수록 좋음)",
+            "values": [120, 110, 100, 85, 60]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "작은 별",
+        "description": "랜덤한 상대 캐릭터 2명에게 별똥별을 떨어트립니다. 맞은 캐릭터는 (n초 동안) 주는 피해가 몬스터 회복으로 전환됩니다.",
+        "parameters": [
+          {
+            "key": "healConvertSeconds",
+            "meaning": "상대 2명(고정) 주는 피해 → 몬스터 회복 전환 n초",
+            "values": [12, 12.5, 13, 14, 15]
+          }
+        ]
+      }
+    },
+    {
+      "code": 3500,
+      "name": "서혁호",
+      "weapon": "너클",
+      "attackType": "Melee",
+      "isSupport": false,
+      "attackPower": 130,
+      "attackInterval": 1.3,
+      "range": 1,
+      "targetPriority": "Front",
+      "mergeType": "Power",
+      "starAttackPower": 49,
+      "starAttackInterval": 0,
+      "gaugePerHit": 20,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 650,
+      "skill": {
+        "name": "환경 적응",
+        "description": "사거리 내 적 1명당 대미지 n% 증가 (최대 5명)",
+        "parameters": [
+          {
+            "key": "damagePerEnemyPercent",
+            "meaning": "사거리 내 적 1명당 피해 n% 증가 (최대 5명)",
+            "values": [6, 7, 8, 9.5, 12]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "지반 붕괴",
+        "description": "지반을 강타해 전방의 적중 당한 대상에게 30% '속도저하'를 5초 부여하고, n% 피해를 입힌다.",
+        "parameters": [
+          {
+            "key": "groundDamagePercent",
+            "meaning": "지반 붕괴 공격력 n% (+ 30% 감속 5초)",
+            "values": [250, 280, 310, 370, 450]
+          }
+        ]
+      }
+    },
+    {
+      "code": 3501,
+      "name": "백하은",
+      "weapon": "쇠뇌(천보노)",
+      "attackType": "Ranged",
+      "isSupport": false,
+      "attackPower": 101,
+      "attackInterval": 1.6,
+      "range": 5.5,
+      "targetPriority": "Front",
+      "mergeType": "Speed",
+      "starAttackPower": 19,
+      "starAttackInterval": -0.123,
+      "gaugePerHit": 24,
+      "killType": "Area",
+      "gaugePerKill": 5,
+      "ultimateGauge": 550,
+      "skill": {
+        "name": "관통하는 화살",
+        "description": "화살이 일직선상 모든 적을 관통하며, 적이 지나갈 때 마다 n% 줄어든다",
+        "parameters": [
+          {
+            "key": "pierceFalloffPercent",
+            "meaning": "관통할 때마다 피해 n% 감소 (낮을수록 좋음)",
+            "values": [30, 27, 24, 18, 10]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "화살비",
+        "description": "(6초 동안 )사거리 내 경로 부분에 화살비를 내려 초당 공격력 n%를 입힙니다. 이동속도 20% 낮춘다.",
+        "parameters": [
+          {
+            "key": "arrowRainDamagePercent",
+            "meaning": "6초 화살비 초당 공격력 n% (+ 20% 감속)",
+            "values": [70, 80, 90, 110, 140]
+          }
+        ]
+      }
+    },
+    {
+      "code": 3502,
+      "name": "천희재",
+      "weapon": "거문고",
+      "attackType": "Melee",
+      "isSupport": true,
+      "attackPower": 109,
+      "attackInterval": 1.3,
+      "range": 2,
+      "targetPriority": "Front",
+      "mergeType": "Power",
+      "starAttackPower": 41,
+      "starAttackInterval": 0,
+      "gaugePerHit": 0,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 500,
+      "skill": {
+        "name": "수입",
+        "description": "(30초마다 10초 동안) SP 수입이 n% 증가합니다. 본인은 공격하지 못하는 버프형 캐릭터입니다.",
+        "parameters": [
+          {
+            "key": "spIncomeBonusPercent",
+            "meaning": "30초마다 10초간 SP 수입 n% 증가",
+            "values": [10, 12, 15, 19, 25]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "사기 증가",
+        "description": "(9초 동안) 아군 모든 근접 캐릭터의 공격력이 n% 증가하고, 사거리가 +1 증가합니다.",
+        "parameters": [
+          {
+            "key": "meleeAttackBonusPercent",
+            "meaning": "9초 동안 아군 근접 공격력 n% + 사거리 1",
+            "values": [12, 14, 16, 20, 25]
+          }
+        ]
+      }
+    },
+    {
+      "code": 4000,
+      "name": "강민준",
+      "weapon": "대검",
+      "attackType": "Melee",
+      "isSupport": false,
+      "attackPower": 131,
+      "attackInterval": 1.5,
+      "range": 1.25,
+      "targetPriority": "Front",
+      "mergeType": "Speed",
+      "starAttackPower": 24,
+      "starAttackInterval": -0.115,
+      "gaugePerHit": 23,
+      "killType": "Area",
+      "gaugePerKill": 5,
+      "ultimateGauge": 625,
+      "skill": {
+        "name": "수증기 대검",
+        "description": "공격할 때마다 열기 1스택을 쌓고, 10스택이 되면 폭발하여 공격력의 n% 피해를 주고, 주변에 공격력 (n×0.4)% 피해를 입힙니다.",
+        "parameters": [
+          {
+            "key": "explosionDamagePercent",
+            "meaning": "10스택 폭발 공격력 n% (주변 × 0.4)",
+            "values": [200, 230, 260, 320, 400]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "수증기 폭발",
+        "description": "사거리 만큼 수증기 폭발을 일이켜 공격력 n% 입히고, (12초 동안) 열기 6스택을 얻고, 공격 할 때 마다 2스택씩 중첩 됩니다.",
+        "parameters": [
+          {
+            "key": "steamDamagePercent",
+            "meaning": "수증기 폭발 공격력 n%",
+            "values": [300, 330, 380, 450, 550]
+          }
+        ]
+      }
+    },
+    {
+      "code": 4001,
+      "name": "임서연",
+      "weapon": "마법진",
+      "attackType": "Ranged",
+      "isSupport": false,
+      "attackPower": 77,
+      "attackInterval": 1,
+      "range": 8,
+      "targetPriority": "HighestHp",
+      "mergeType": "Power",
+      "starAttackPower": 29,
+      "starAttackInterval": 0,
+      "gaugePerHit": 15,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 400,
+      "skill": {
+        "name": "심안",
+        "description": "공격력 n% ~ m% 레이저를 발사하여, 초 마다 공격력이 점점 증가합니다. ( 10초 최고 공격 도달)타겟이 바뀌면 초기화)",
+        "parameters": [
+          {
+            "key": "laserStartPercent",
+            "meaning": "레이저 시작 공격력 n%",
+            "values": [30, 34, 39, 48, 60]
+          },
+          {
+            "key": "laserMaxPercent",
+            "meaning": "레이저 최대 공격력 m% (10초 도달)",
+            "values": [150, 170, 195, 240, 300]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "심안 강화",
+        "description": "(n초 동안) \"심안\" 스킬이 초기화 되지 않습니다.",
+        "parameters": [
+          {
+            "key": "noResetSeconds",
+            "meaning": "n초 동안 심안 초기화 없음",
+            "values": [8, 8.6, 9.5, 11, 13]
+          }
+        ]
+      }
+    },
+    {
+      "code": 4002,
+      "name": "쇼타",
+      "weapon": "이도류",
+      "attackType": "Melee",
+      "isSupport": false,
+      "attackPower": 83,
+      "attackInterval": 0.8,
+      "range": 1,
+      "targetPriority": "Front",
+      "mergeType": "Power",
+      "starAttackPower": 31,
+      "starAttackInterval": 0,
+      "gaugePerHit": 12,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 500,
+      "skill": {
+        "name": "해일",
+        "description": "80초 마다 큰파도를 형성해 적들을 진행방향의 반대로 밀어내고, n% 대미지를 가합니다.",
+        "parameters": [
+          {
+            "key": "tidalDamagePercent",
+            "meaning": "해일 공격력 n% + 밀어내기 (80초마다)",
+            "values": [150, 170, 195, 240, 300]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "암살",
+        "description": "적을 암살 시도합니다. n% 확률로 상대 필드의 랜덤 캐릭터 1명을 별레벨을 감소 시킵니다. (별 레벨 1일시, 제거)",
+        "parameters": [
+          {
+            "key": "starDownChancePercent",
+            "meaning": "n% 확률로 상대 랜덤 캐릭터 별 -1 (1★이면 제거)",
+            "values": [10, 20, 30, 50, 80]
+          }
+        ]
+      }
+    }
+  ]
+}

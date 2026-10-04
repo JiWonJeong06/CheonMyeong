@@ -1,0 +1,15 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Common/Common.uss?fileID=7433441132597879392&amp;guid=dae192441ed51e44bafe4c47767337eb&amp;type=3#Common"/>
+    <ui:VisualElement name="popup-root" class="popup-root">
+        <ui:VisualElement class="popup-box">
+            <ui:Label text="일시정지" class="popup-title"/>
+            <ui:VisualElement class="button-row">
+                <ui:Button name="resume-button" text="계속하기" class="app-button"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="button-row" style="margin-top: 8px;">
+                <ui:Button name="settings-button" text="설정" class="app-button"/>
+                <ui:Button name="surrender-button" text="항복" class="app-button"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

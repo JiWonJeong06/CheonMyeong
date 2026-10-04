@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_4001
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 4001
+  characterId: char_4001
+  displayName: "\uC784\uC11C\uC5F0"
+  faction: "\uBB34\uC18C\uC18D"
+  description: 
+  weapon: "\uB9C8\uBC95\uC9C4"
+  attackType: 1
+  isSupport: 0
+  mergeType: 0
+  targetPriority: 1
+  baseDamage: 77
+  attackInterval: 1
+  range: 8
+  starAttackPower: 29
+  starAttackInterval: 0
+  gaugePerHit: 15
+  killType: 0
+  gaugePerKill: 10
+  ultimateGauge: 400
+  skill:
+    name: "\uC2EC\uC548"
+    description: "\uACF5\uACA9\uB825 n% ~ m% \uB808\uC774\uC800\uB97C \uBC1C\uC0AC\uD558\uC5EC,
+      \uCD08 \uB9C8\uB2E4 \uACF5\uACA9\uB825\uC774 \uC810\uC810 \uC99D\uAC00\uD569\uB2C8\uB2E4.
+      ( 10\uCD08 \uCD5C\uACE0 \uACF5\uACA9 \uB3C4\uB2EC)\uD0C0\uAC9F\uC774 \uBC14\uB00C\uBA74
+      \uCD08\uAE30\uD654)"
+    parameters:
+    - key: laserStartPercent
+      meaning: "\uB808\uC774\uC800 \uC2DC\uC791 \uACF5\uACA9\uB825 n%"
+      values:
+      - 30
+      - 34
+      - 39
+      - 48
+      - 60
+    - key: laserMaxPercent
+      meaning: "\uB808\uC774\uC800 \uCD5C\uB300 \uACF5\uACA9\uB825 m% (10\uCD08 \uB3C4\uB2EC)"
+      values:
+      - 150
+      - 170
+      - 195
+      - 240
+      - 300
+  ultimate:
+    name: "\uC2EC\uC548 \uAC15\uD654"
+    description: "(n\uCD08 \uB3D9\uC548) \"\uC2EC\uC548\" \uC2A4\uD0AC\uC774 \uCD08\uAE30\uD654
+      \uB418\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."
+    parameters:
+    - key: noResetSeconds
+      meaning: "n\uCD08 \uB3D9\uC548 \uC2EC\uC548 \uCD08\uAE30\uD654 \uC5C6\uC74C"
+      values:
+      - 8
+      - 8.6
+      - 9.5
+      - 11
+      - 13
+  isStarter: 0
+  unlockCost: 100
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

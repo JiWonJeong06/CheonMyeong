@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_1500
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 1500
+  characterId: char_1500
+  displayName: "\uAE40\uB3C4\uD604"
+  faction: "\uD751\uC5F0\uD68C"
+  description: 
+  weapon: "\uAD8C\uCD1D"
+  attackType: 1
+  isSupport: 0
+  mergeType: 0
+  targetPriority: 0
+  baseDamage: 76
+  attackInterval: 0.6
+  range: 4
+  starAttackPower: 29
+  starAttackInterval: 0
+  gaugePerHit: 9
+  killType: 0
+  gaugePerKill: 10
+  ultimateGauge: 500
+  skill:
+    name: "\uC554\uD751 \uCD1D\uC54C"
+    description: "7\uBC1C\uB9C8\uB2E4 m\uCD08 \uB3D9\uC548 \uC7AC\uC7A5\uC804\uD569\uB2C8\uB2E4.
+      7\uBC88\uC9F8 \uACF5\uACA9\uC740 \uACF5\uACA9\uB825\uC758 n% \uCD94\uAC00 \uD53C\uD574\uB97C
+      \uC785\uD799\uB2C8\uB2E4."
+    parameters:
+    - key: seventhShotBonusPercent
+      meaning: "7\uBC88\uC9F8 \uACF5\uACA9 \uCD94\uAC00 \uD53C\uD574 \uACF5\uACA9\uB825
+        n%"
+      values:
+      - 40
+      - 50
+      - 60
+      - 75
+      - 100
+    - key: reloadSeconds
+      meaning: "7\uBC1C\uB9C8\uB2E4 \uC7AC\uC7A5\uC804 m\uCD08 (\uC9E7\uC744\uC218\uB85D
+        \uC88B\uC74C)"
+      values:
+      - 1.75
+      - 1.7
+      - 1.6
+      - 1.45
+      - 1.25
+  ultimate:
+    name: "\uC5B4\uB460\uC758 \uC30D\uAD8C\uCD1D"
+    description: "(n\uCD08 \uB3D9\uC548) \uBAA8\uB4E0 \uACF5\uACA9\uC774 7\uBC88\uC9F8
+      \uACF5\uACA9 \uD6A8\uACFC(\uCD94\uAC00 \uD53C\uD574)\uB97C \uBC1B\uACE0, \uC0AC\uAC70\uB9AC\uAC00
+      +2 \uC99D\uAC00\uD569\uB2C8\uB2E4. \uC7AC\uC7A5\uC804\uC744 \uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."
+    parameters:
+    - key: durationSeconds
+      meaning: "n\uCD08 \uB3D9\uC548 \uBAA8\uB4E0 \uACF5\uACA9\uC774 7\uBC88\uC9F8
+        \uACF5\uACA9 \uD6A8\uACFC + \uC0AC\uAC70\uB9AC +2, \uC7AC\uC7A5\uC804 \uC5C6\uC74C"
+      values:
+      - 12
+      - 12.5
+      - 13
+      - 14.5
+      - 16
+  isStarter: 1
+  unlockCost: 0
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

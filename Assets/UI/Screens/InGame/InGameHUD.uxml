@@ -1,0 +1,45 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Common/Common.uss?fileID=7433441132597879392&amp;guid=dae192441ed51e44bafe4c47767337eb&amp;type=3#Common"/>
+    <Style src="project://database/Assets/UI/Screens/InGame/InGameHUD.uss?fileID=7433441132597879392&amp;guid=2ac9fd7ad2de49409b1f066c23142b99&amp;type=3#InGameHUD"/>
+    <ui:VisualElement name="hud-root" class="hud-root">
+        <ui:VisualElement name="my-panel" class="hud-panel hud-panel-mine">
+            <ui:Label text="내 기지" class="hud-panel-title"/>
+            <ui:VisualElement class="stat-row">
+                <ui:Label text="HP" class="stat-label"/>
+                <ui:VisualElement class="bar-track">
+                    <ui:VisualElement name="my-hp-fill" class="bar-fill bar-fill-hp"/>
+                </ui:VisualElement>
+                <ui:Label name="my-hp-text" text="0/0" class="stat-value"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="stat-row">
+                <ui:Label text="SP" class="stat-label"/>
+                <ui:VisualElement class="bar-track">
+                    <ui:VisualElement name="my-sp-fill" class="bar-fill bar-fill-sp"/>
+                </ui:VisualElement>
+                <ui:Label name="my-sp-text" text="0/0" class="stat-value"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="pause-button-wrapper" class="hud-pause-wrapper">
+            <ui:Label name="season-weather-label" text="- · -" class="season-weather-label"/>
+            <ui:Button name="pause-button" text="II" class="hud-pause-button"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="enemy-panel" class="hud-panel hud-panel-enemy">
+            <ui:Label text="상대 기지" class="hud-panel-title"/>
+            <ui:VisualElement class="stat-row">
+                <ui:Label text="HP" class="stat-label"/>
+                <ui:VisualElement class="bar-track">
+                    <ui:VisualElement name="enemy-hp-fill" class="bar-fill bar-fill-hp"/>
+                </ui:VisualElement>
+                <ui:Label name="enemy-hp-text" text="0/0" class="stat-value"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="stat-row">
+                <ui:Label text="SP" class="stat-label"/>
+                <ui:VisualElement class="bar-track">
+                    <ui:VisualElement name="enemy-sp-fill" class="bar-fill bar-fill-sp"/>
+                </ui:VisualElement>
+                <ui:Label name="enemy-sp-text" text="0/0" class="stat-value"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="vision-block-overlay" class="vision-block-overlay" picking-mode="Ignore"/>
+</ui:UXML>

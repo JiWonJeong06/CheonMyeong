@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 540ba197edce3834cb048c9591a1f329, type: 3}
+  m_Name: char_3501
+  m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Data.CharacterDataSO
+  code: 3501
+  characterId: char_3501
+  displayName: "\uBC31\uD558\uC740"
+  faction: "\uD654\uB791\uD68C"
+  description: 
+  weapon: "\uC1E0\uB1CC(\uCC9C\uBCF4\uB178)"
+  attackType: 1
+  isSupport: 0
+  mergeType: 1
+  targetPriority: 0
+  baseDamage: 101
+  attackInterval: 1.6
+  range: 5.5
+  starAttackPower: 19
+  starAttackInterval: -0.123
+  gaugePerHit: 24
+  killType: 1
+  gaugePerKill: 5
+  ultimateGauge: 550
+  skill:
+    name: "\uAD00\uD1B5\uD558\uB294 \uD654\uC0B4"
+    description: "\uD654\uC0B4\uC774 \uC77C\uC9C1\uC120\uC0C1 \uBAA8\uB4E0 \uC801\uC744
+      \uAD00\uD1B5\uD558\uBA70, \uC801\uC774 \uC9C0\uB098\uAC08 \uB54C \uB9C8\uB2E4
+      n% \uC904\uC5B4\uB4E0\uB2E4"
+    parameters:
+    - key: pierceFalloffPercent
+      meaning: "\uAD00\uD1B5\uD560 \uB54C\uB9C8\uB2E4 \uD53C\uD574 n% \uAC10\uC18C
+        (\uB0AE\uC744\uC218\uB85D \uC88B\uC74C)"
+      values:
+      - 30
+      - 27
+      - 24
+      - 18
+      - 10
+  ultimate:
+    name: "\uD654\uC0B4\uBE44"
+    description: "(6\uCD08 \uB3D9\uC548 )\uC0AC\uAC70\uB9AC \uB0B4 \uACBD\uB85C \uBD80\uBD84\uC5D0
+      \uD654\uC0B4\uBE44\uB97C \uB0B4\uB824 \uCD08\uB2F9 \uACF5\uACA9\uB825 n%\uB97C
+      \uC785\uD799\uB2C8\uB2E4. \uC774\uB3D9\uC18D\uB3C4 20% \uB0AE\uCD98\uB2E4."
+    parameters:
+    - key: arrowRainDamagePercent
+      meaning: "6\uCD08 \uD654\uC0B4\uBE44 \uCD08\uB2F9 \uACF5\uACA9\uB825 n% (+
+        20% \uAC10\uC18D)"
+      values:
+      - 70
+      - 80
+      - 90
+      - 110
+      - 140
+  isStarter: 0
+  unlockCost: 100
+  unlockCurrency: 0
+  iconSprite: {fileID: 0}
+  portraitSprite: {fileID: 0}

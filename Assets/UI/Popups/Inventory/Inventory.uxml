@@ -1,0 +1,26 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Common/Common.uss?fileID=7433441132597879392&amp;guid=dae192441ed51e44bafe4c47767337eb&amp;type=3#Common"/>
+    <Style src="project://database/Assets/UI/Popups/Inventory/Inventory.uss?fileID=7433441132597879392&amp;guid=1229809e14094000b45ad7e1817e9975&amp;type=3#Inventory"/>
+    <ui:VisualElement name="popup-root" class="popup-root">
+        <ui:VisualElement class="popup-box inventory-box">
+            <ui:Label text="보관함 (편성)" class="popup-title" />
+
+            <ui:VisualElement name="preset-tabs" class="preset-tabs" />
+
+            <ui:VisualElement name="deck-slots" class="deck-slots" />
+
+            <ui:VisualElement name="deck-actions" class="deck-actions">
+                <ui:Label name="deck-save-status" class="deck-save-status" />
+                <ui:Button name="deck-save-button" text="편성 저장" class="deck-save-button" />
+            </ui:VisualElement>
+
+            <ui:Label text="캐릭터를 눌러 편성에 넣거나 빼세요 (중복 배치 불가 / 저장 버튼을 눌러야 반영됩니다)" class="inventory-hint" />
+
+            <ui:ScrollView name="inventory-scroll" class="inventory-scroll">
+                <ui:VisualElement name="inventory-grid" class="inventory-grid" />
+            </ui:ScrollView>
+
+            <ui:Button name="close-button" text="닫기" class="popup-close-button" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

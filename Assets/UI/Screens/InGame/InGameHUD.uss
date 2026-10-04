@@ -1,0 +1,127 @@
+/* 인게임 HUD - 내 기지/상대 기지의 HP·SP 바 + 중앙 일시정지 버튼. 화면 위쪽에 떠있는 형태. */
+
+.hud-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    /* 오른쪽 160px은 InGameDeck.uss의 .deck-root width(160px)와 반드시 같아야 함 - 화면 오른쪽에
+       항상 떠있는 덱 패널이 차지하는 폭만큼 HUD 전체(내 기지/일시정지 버튼/상대 기지)를 왼쪽으로
+       비켜줘서, 상대 기지 패널이 덱 패널 밑에 깔려 겹치는 걸 막음. 덱 폭이 나중에 바뀌면 이 값도
+       같이 바꿀 것(InGameCameraLayout.cs의 reservedRightPanelWidth도 마찬가지).*/
+    right: 160px;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 12px;
+}
+
+.hud-panel {
+    width: 220px;
+    padding: 10px 14px;
+    background-color: rgba(20, 20, 24, 0.75);
+    border-radius: 8px;
+}
+
+.hud-panel-title {
+    font-size: 13px;
+    -unity-font-style: bold;
+    margin-bottom: 6px;
+}
+
+.hud-panel-mine .hud-panel-title {
+    color: rgb(120, 200, 255);
+}
+
+.hud-panel-enemy .hud-panel-title {
+    color: rgb(255, 120, 120);
+}
+
+.stat-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    width: 24px;
+    color: rgb(210, 210, 210);
+    font-size: 11px;
+}
+
+.bar-track {
+    flex-grow: 1;
+    height: 10px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 0 6px;
+}
+
+.bar-fill {
+    height: 100%;
+    width: 100%;
+}
+
+.bar-fill-hp {
+    background-color: rgb(90, 200, 110);
+}
+
+.bar-fill-sp {
+    background-color: rgb(90, 160, 230);
+}
+
+.stat-value {
+    width: 56px;
+    color: rgb(255, 255, 255);
+    font-size: 11px;
+    -unity-text-align: middle-right;
+}
+
+/* hud-root가 flex-direction: row + justify-content: space-between이라, my-panel과 enemy-panel
+   사이에 세 번째 자식으로 이 래퍼를 두면 자동으로 가운데 자리를 차지함(별도 absolute 위치 계산 불필요).
+   hud-root의 유효 폭이 오른쪽 덱 패널만큼 줄어들었으므로, 이 가운데 자리도 자동으로 그 줄어든
+   영역의 중앙으로 따라감(추가 계산 필요 없음). */
+.hud-pause-wrapper {
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 2px;
+}
+
+.hud-pause-button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 20px;
+    font-size: 14px;
+    -unity-font-style: bold;
+    background-color: rgba(20, 20, 24, 0.75);
+    color: rgb(255, 255, 255);
+}
+
+/* 계절/날씨 표시 - 천명.pptx "본게임 화면 구성" 슬라이드에 "추가 예정(기획안)" 항목으로 명시된
+   UI. 일시정지 버튼 위에 작게 텍스트로만 표시함(전용 아이콘 에셋이 아직 없어서 - 아이콘은 추후
+   교체 가능하도록 라벨 하나로만 구성해둠, InGameHUDController.FormatSeasonWeather 참고). */
+.season-weather-label {
+    margin-bottom: 4px;
+    padding: 3px 8px;
+    background-color: rgba(20, 20, 24, 0.75);
+    border-radius: 6px;
+    color: rgb(230, 230, 230);
+    font-size: 11px;
+    -unity-text-align: middle-center;
+}
+
+/* 낙엽 날씨 시야 가림 연출 - 순수 시각 효과(게임플레이 수치 영향 없음, 기획서에도 수치 없이
+   "7초간 낙엽이 시야를 가림"이라고만 돼 있음). 화면 전체를 덮는 반투명 레이어를
+   InGameHUDController가 opacity 트랜지션으로 페이드 인/아웃함 - 기본은 완전히 투명 + 클릭 통과
+   (picking-mode: Ignore, UXML에서 지정)라 평소엔 있으나 마나임. */
+.vision-block-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(60, 50, 20, 0.55);
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 0.4s;
+}
