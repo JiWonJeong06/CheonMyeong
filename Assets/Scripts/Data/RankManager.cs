@@ -26,6 +26,7 @@ namespace TowerDefense.Data
         private const int DummyStartTrophies = 0;
         private const int DummyWinDelta = 30;
         private const int DummyLoseDelta = -30;
+        private const int DummyDrawDelta = 10; // 무승부는 양쪽 모두 +10 (기획 확정, 2026-10-06)
 
         public int CurrentTrophies { get; private set; }
 
@@ -57,9 +58,11 @@ namespace TowerDefense.Data
             OnTrophiesChanged?.Invoke(CurrentTrophies);
         }
 
-        /// <summary>무승부 - 트로피 변동 없음(승/패 가감 없이 값만 유지).</summary>
+        /// <summary>무승부 - 양쪽 모두 트로피 +10(각 클라이언트가 자기 몫만 반영함).</summary>
         public void ReportMatchDraw()
         {
+            CurrentTrophies = Mathf.Max(0, CurrentTrophies + DummyDrawDelta);
+            PlayerPrefs.SetInt(TrophyKey, CurrentTrophies);
             OnTrophiesChanged?.Invoke(CurrentTrophies);
         }
 

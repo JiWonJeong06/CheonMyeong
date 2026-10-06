@@ -24,6 +24,10 @@ namespace TowerDefense.Monsters
 
         public static void Unregister(MonsterPathFollower monster) => _active.Remove(monster);
 
-        public static IReadOnlyCollection<MonsterPathFollower> GetAll() => _active;
+        /// <summary>살아있는 몬스터 전체. 반환형을 HashSet으로 노출해 foreach가 구조체 열거자를 쓰게 함 - IReadOnlyCollection으로
+        /// 돌려주면 foreach마다 열거자가 박싱(힙 할당)되어, 타워 수 × 매 프레임 GC가 쌓임.
+        /// 주의: 순회 도중 피해를 줘서 몬스터가 죽으면(풀 반납 → Unregister) 컬렉션이 바뀌어 예외가 나므로,
+        /// 순회하며 피해를 주는 코드는 먼저 리스트로 복사(TowerUnit.CollectOwnBoardMonsters)한 뒤 그 리스트를 돌 것.</summary>
+        public static HashSet<MonsterPathFollower> GetAll() => _active;
     }
 }

@@ -29,7 +29,7 @@ namespace TowerDefense.Monsters
     /// [구조 조정 - 천명.pptx(2026-09-28, 최신 기획서) 반영] RunWaves()가 예전엔
     /// "WaveDataSO.entries를 몬스터 종류별로 순서대로 다 스폰"했는데, 실제 기획은 "80초 동안
     /// 150마리를 병사70%/기마병사20%/방패병사10% 가중치로 매번 랜덤 뽑아 균등 간격 스폰"이라
-    /// RunWaveSpawning()으로 교체함(PickWeightedRandom이 실제 가중치 뽑기 담당). 80초 경과 후
+    /// RunWaveSpawning()으로 교체함(BuildWaveSequence가 종류별 개수를 분포대로 배분하고 순서를 섞음). 80초 경과 후
     /// 보스전(잔여 몬스터 체력 합산 + 보스 스폰 + 처치 대기)은 RunBossPhase()가 담당함(아래
     /// 별도 문단 참고) - RunWaves()는 웨이브마다 RunWaveSpawning → RunBossPhase 순으로 진행함.
     ///
@@ -116,6 +116,146 @@ namespace TowerDefense.Monsters
 
         private bool IsServer => NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer;
 
+        /// <summary>상대 보드의 스포너(MatchController.TryStartMatch가 연결). 상대 필드에 거는 스킬(진혜영 붓 등)이 씀.</summary>
+        public MonsterSpawner OpponentSpawner => opponentSpawner;
+
+        /// <summary>이 보드 몬스터가 따라가는 웨이포인트(읽기 전용으로만 쓸 것) - 경로 위 위치 계산용.</summary>
+        public Transform[] Waypoints => waypoints;
+
+        /// <summary>월드 단위 칸 크기.</summary>
+        public float CellSize => _cellSize;
+
+        private float _pathLength = -1f;
+
+        /// <summary>경로 전체 길이(월드 단위). 웨이포인트가 고정이라 처음 한 번만 계산해 캐싱함 - 밀어내기 '경로 전체의 n%' 기준.</summary>
+        public float PathLength
+        {
+            get
+            {
+                if (_pathLength >= 0f) return _pathLength;
+                float sum = 0f;
+                if (waypoints != null)
+                {
+                    for (int i = 1; i < waypoints.Length; i++)
+                    {
+                        if (waypoints[i] == null || waypoints[i - 1] == null) continue;
+                        sum += Vector3.Distance(waypoints[i - 1].position, waypoints[i].position);
+                    }
+                }
+                _pathLength = sum;
+                return sum;
+            }
+        }
+
+        /// <summary>경로를 step 간격으로 훑어 center에서 radius 안에 있는 점들을 buffer에 채움(buffer는 먼저 비움). 개수 반환.
+        /// 경로 위에 무언가를 놓는 스킬(전민재 방패 등)이 씀 - 스킬 발동 때만 호출되므로 할당/비용 걱정 없음.</summary>
+        public int GetPathPointsInRange(System.Collections.Generic.List<Vector3> buffer, Vector3 center, float radius, float step)
+        {
+            buffer.Clear();
+            if (waypoints == null || step <= 0f) return 0;
+
+            float rSqr = radius * radius;
+            for (int i = 1; i < waypoints.Length; i++)
+            {
+                if (waypoints[i] == null || waypoints[i - 1] == null) continue;
+                Vector3 a = waypoints[i - 1].position;
+                Vector3 b = waypoints[i].position;
+                float len = Vector3.Distance(a, b);
+                int n = Mathf.Max(1, Mathf.CeilToInt(len / step));
+                for (int k = 0; k <= n; k++)
+                {
+                    Vector3 pt = Vector3.Lerp(a, b, (float)k / n);
+                    float dx = pt.x - center.x;
+                    float dy = pt.y - center.y;
+                    if (dx * dx + dy * dy <= rSqr) buffer.Add(pt);
+                }
+            }
+            return buffer.Count;
+        }
+
+        // ===== 이 보드 몬스터 전체에 걸리는 시간제 효과 (서버) =====
+
+        public const float MaxMoveSpeedBonusPercent = 30f; // 진혜영 '붓' 중첩 상한(엑셀)
+
+        private struct TimedValue
+        {
+            public float value;
+            public float expireAt;
+        }
+        private readonly System.Collections.Generic.List<TimedValue> _speedBonuses = new(4);
+        private float _moveSpeedBonusPercent;
+
+        /// <summary>이 보드 몬스터 전체의 추가 이동속도(%). 진혜영 붓이 상대 스포너에 걸어 줌(최대 30%).</summary>
+        public float MoveSpeedBonusPercent => _moveSpeedBonusPercent;
+
+        /// <summary>[서버] 이동속도 +percent%를 seconds초 동안 추가(여러 번 걸면 중첩, 합계 최대 30%).</summary>
+        public void AddMoveSpeedBonus(float percent, float seconds)
+        {
+            if (!IsServer || percent <= 0f || seconds <= 0f) return;
+            _speedBonuses.Add(new TimedValue { value = percent, expireAt = Time.time + seconds });
+            RecalculateSpeedBonus();
+        }
+
+        private void RecalculateSpeedBonus()
+        {
+            float sum = 0f;
+            for (int i = 0; i < _speedBonuses.Count; i++) sum += _speedBonuses[i].value;
+            _moveSpeedBonusPercent = Mathf.Min(sum, MaxMoveSpeedBonusPercent);
+        }
+
+        private struct BlockZone
+        {
+            public Vector3 center;
+            public float radiusSqr;
+            public float expireAt;
+        }
+        private readonly System.Collections.Generic.List<BlockZone> _blocks = new(6);
+
+        /// <summary>[서버] 길 막기(전민재 방패 벽) - seconds 동안 center에서 radius 안으로 들어온 몬스터는 이동하지 못함(보스도).</summary>
+        public void AddBlockZone(Vector3 center, float radius, float seconds)
+        {
+            if (!IsServer || seconds <= 0f) return;
+            _blocks.Add(new BlockZone { center = center, radiusSqr = radius * radius, expireAt = Time.time + seconds });
+        }
+
+        /// <summary>[서버] 이 위치가 방패 벽에 막혀 있는가(몬스터가 매 프레임 호출 - 벽이 없으면 즉시 false).</summary>
+        public bool IsBlockedAt(Vector3 position)
+        {
+            for (int i = 0; i < _blocks.Count; i++)
+            {
+                float dx = position.x - _blocks[i].center.x;
+                float dy = position.y - _blocks[i].center.y;
+                if (dx * dx + dy * dy <= _blocks[i].radiusSqr) return true;
+            }
+            return false;
+        }
+
+        // 만료된 시간제 효과 정리 - 항목이 없으면 비용 거의 없음
+        private void Update()
+        {
+            if (!IsServer) return;
+
+            float now = Time.time;
+            if (_speedBonuses.Count > 0)
+            {
+                bool removed = false;
+                for (int i = _speedBonuses.Count - 1; i >= 0; i--)
+                {
+                    if (now >= _speedBonuses[i].expireAt)
+                    {
+                        _speedBonuses.RemoveAt(i);
+                        removed = true;
+                    }
+                }
+                if (removed) RecalculateSpeedBonus();
+            }
+
+            for (int i = _blocks.Count - 1; i >= 0; i--)
+            {
+                if (now >= _blocks[i].expireAt) _blocks.RemoveAt(i);
+            }
+        }
+
         /// <summary>몬스터가 경로 끝(기지)에 도달했을 때 발생(서버에서만 발생함) - BaseHealth가 구독해서 체력을 깎음.</summary>
         public event Action<MonsterDataSO> OnMonsterReachedEndEvent;
 
@@ -158,6 +298,10 @@ namespace TowerDefense.Monsters
             _waveRoutine = StartCoroutine(RunWaves());
         }
 
+        /// <summary>웨이브 시작 전 대기가 시작될 때 발생(서버) - (웨이브 번호 1부터, 대기 초). MatchController가 이 보드
+        /// 플레이어 화면의 카운트다운으로 중계함. 보스를 잡은 시점이 보드마다 달라서 카운트다운도 보드별로 따로 시작됨.</summary>
+        public event Action<int, float> OnWaveCountdown;
+
         private IEnumerator RunWaves()
         {
             foreach (var wave in waves)
@@ -183,6 +327,7 @@ namespace TowerDefense.Monsters
                     ApplyOneTimeKnockbackToMine();
                 }
 
+                if (wave.delayBeforeWave > 0f) OnWaveCountdown?.Invoke(_waveNumber, wave.delayBeforeWave);
                 yield return new WaitForSeconds(wave.delayBeforeWave);
                 yield return RunWaveSpawning(wave);
                 yield return RunBossPhase(wave);
@@ -206,10 +351,14 @@ namespace TowerDefense.Monsters
                 yield break;
             }
 
+            // 종류별 개수는 확률이 아니라 "분포"로 정확히 맞춤(150마리 → 병사 105 / 기마 30 / 방패 15).
+            // 순서만 섞고, 양쪽 보드가 같은 순서를 받도록 매치 공통 시드를 씀(MatchController.GetWaveSpawnSeed).
+            var sequence = BuildWaveSequence(wave.monsterPool, wave.ownMonsterCount, GetWaveSeed());
+
             float interval = wave.ownMonsterCount > 0 ? wave.waveDuration / wave.ownMonsterCount : 0f;
-            for (int i = 0; i < wave.ownMonsterCount; i++)
+            for (int i = 0; i < sequence.Length; i++)
             {
-                var monster = PickWeightedRandom(wave.monsterPool);
+                var monster = sequence[i];
                 if (monster != null)
                 {
                     float actualHp = SoldierHpAt(_growthSeconds) * monster.hpMultiplier;
@@ -223,32 +372,73 @@ namespace TowerDefense.Monsters
             }
         }
 
-        // MonsterDataSO.spawnWeight(%) 비율대로 하나를 뽑음. 가중치 합이 0 이하면(전부 0으로
-        // 잘못 세팅된 경우) 방어적으로 첫 항목을 반환함 - 조용히 스폰이 멈추는 것보단 나음.
-        private static MonsterDataSO PickWeightedRandom(List<MonsterDataSO> pool)
+        private int GetWaveSeed()
         {
+            return MatchController.Instance != null
+                ? MatchController.Instance.GetWaveSpawnSeed(_waveNumber)
+                : UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+        }
+
+        // MonsterDataSO.spawnWeight(%) 비율대로 종류별 개수를 정확히 배분한 뒤(내림 + 큰 소수부 순으로 남는 자리 배분)
+        // 시드 고정 셔플로 순서만 섞음. 가중치 합이 0 이하면(전부 0으로 잘못 세팅된 경우) 방어적으로 첫 항목만 씀 -
+        // 조용히 스폰이 멈추는 것보단 나음. 웨이브당 한 번만 호출됨(배열 1개 할당).
+        private static MonsterDataSO[] BuildWaveSequence(List<MonsterDataSO> pool, int count, int seed)
+        {
+            var result = new MonsterDataSO[Mathf.Max(0, count)];
+            if (result.Length == 0) return result;
+
             float totalWeight = 0f;
-            foreach (var m in pool)
+            for (int i = 0; i < pool.Count; i++)
             {
-                if (m != null) totalWeight += Mathf.Max(0f, m.spawnWeight);
+                if (pool[i] != null) totalWeight += Mathf.Max(0f, pool[i].spawnWeight);
             }
 
             if (totalWeight <= 0f)
             {
                 Debug.LogWarning("[MonsterSpawner] monsterPool의 spawnWeight 합이 0 이하임 - 첫 항목을 그대로 씀.");
-                return pool.Count > 0 ? pool[0] : null;
+                for (int i = 0; i < result.Length; i++) result[i] = pool[0];
+                return result;
             }
 
-            float roll = UnityEngine.Random.Range(0f, totalWeight);
-            float cumulative = 0f;
-            foreach (var m in pool)
+            var counts = new int[pool.Count];
+            var remainders = new float[pool.Count];
+            int assigned = 0;
+            for (int i = 0; i < pool.Count; i++)
             {
-                if (m == null) continue;
-                cumulative += Mathf.Max(0f, m.spawnWeight);
-                if (roll <= cumulative) return m;
+                if (pool[i] == null) continue;
+                float exact = result.Length * Mathf.Max(0f, pool[i].spawnWeight) / totalWeight;
+                counts[i] = Mathf.FloorToInt(exact);
+                remainders[i] = exact - counts[i];
+                assigned += counts[i];
             }
 
-            return pool[pool.Count - 1];
+            // 남은 자리는 소수부가 큰 종류부터 1개씩 배분.
+            for (int left = result.Length - assigned; left > 0; left--)
+            {
+                int best = -1;
+                for (int i = 0; i < pool.Count; i++)
+                {
+                    if (pool[i] == null || pool[i].spawnWeight <= 0f) continue;
+                    if (best < 0 || remainders[i] > remainders[best]) best = i;
+                }
+                counts[best]++;
+                remainders[best] = -1f;
+            }
+
+            int index = 0;
+            for (int i = 0; i < pool.Count; i++)
+            {
+                for (int k = 0; k < counts[i]; k++) result[index++] = pool[i];
+            }
+
+            // Fisher-Yates 셔플(시드 고정 - 같은 시드면 항상 같은 순서).
+            var rng = new System.Random(seed);
+            for (int i = result.Length - 1; i > 0; i--)
+            {
+                int j = rng.Next(i + 1);
+                (result[i], result[j]) = (result[j], result[i]);
+            }
+            return result;
         }
 
         // 자기 진영 몬스터(+전송받은 몬스터 포함) 스폰이 끝난 뒤(≈waveDuration 경과) 호출됨.

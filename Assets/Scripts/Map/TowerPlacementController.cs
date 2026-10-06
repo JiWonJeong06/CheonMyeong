@@ -65,9 +65,6 @@ namespace TowerDefense.Map
         {
             if (Mouse.current == null) return;
 
-            // [디버그] E 키: 선택된 캐릭터의 SP 강화 1단계 - 강화 패널(정지원 파트)이 붙기 전 테스트용. 패널 연결 후 제거할 것.
-            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame) DebugEnhanceSelected();
-
             if (Mouse.current.leftButton.wasPressedThisFrame) OnPointerDown();
             else if (Mouse.current.leftButton.wasReleasedThisFrame) OnPointerUp();
         }
@@ -133,17 +130,17 @@ namespace TowerDefense.Map
             if (!TryGetPointerCell(out var board, out var cell)) return;
             if (cell == _dragFromCell) return; // 그냥 클릭 - 아무 일 없음
 
-            var from = TowerUnit.FindAtCell(board.Grid, _dragFromCell);
-            var to = TowerUnit.FindAtCell(board.Grid, cell);
-            if (from == null || to == null || from.Data == null || to.Data == null) return;
+            var fromTower = TowerUnit.FindAtCell(board.Grid, _dragFromCell);
+            var toTower = TowerUnit.FindAtCell(board.Grid, cell);
+            if (fromTower == null || toTower == null || fromTower.Data == null || toTower.Data == null) return;
 
             // 서버가 최종 검증하지만(같은 캐릭터 + 같은 별, 최대 5★) 로컬에서 먼저 알려줘야 왜 안 되는지 알 수 있음.
-            if (from.Data.characterId != to.Data.characterId || from.Stars != to.Stars)
+            if (fromTower.Data.characterId != toTower.Data.characterId || fromTower.Stars != toTower.Stars)
             {
                 ToastController.Instance?.Show("같은 캐릭터 + 같은 별끼리만 합성할 수 있습니다");
                 return;
             }
-            if (to.Stars >= TowerProgression.MaxStars)
+            if (toTower.Stars >= TowerProgression.MaxStars)
             {
                 ToastController.Instance?.Show("이미 최대 별입니다");
                 return;
@@ -174,27 +171,6 @@ namespace TowerDefense.Map
             // 최종 SP 차감/타워 생성은 서버가 함 - 여기서는 요청만 보냄.
             mc.RequestPlaceTowerRpc(myBoard.BoardIndex, cell.x, cell.y, selectedCharacter.characterId);
             OnTowerPlaced?.Invoke();
-        }
-
-        private void DebugEnhanceSelected()
-        {
-            var mc = MatchController.Instance;
-            var board = mc != null ? mc.GetLocalBoard() : null;
-            if (board == null || selectedCharacter == null) return;
-
-            int level = mc.GetEnhanceLevel(board.BoardIndex, selectedCharacter.characterId);
-            int cost = TowerProgression.GetEnhanceCost(level);
-            if (cost <= 0)
-            {
-                ToastController.Instance?.Show("이미 최대 강화입니다");
-                return;
-            }
-            if (mc.GetBoardSp(board.BoardIndex) < cost)
-            {
-                ToastController.Instance?.Show("SP가 부족합니다");
-                return;
-            }
-            mc.RequestEnhanceRpc(board.BoardIndex, selectedCharacter.characterId);
         }
     }
 }

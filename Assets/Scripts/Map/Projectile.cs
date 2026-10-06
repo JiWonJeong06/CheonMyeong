@@ -29,11 +29,13 @@ namespace TowerDefense.Map
 
         private MonsterPathFollower _target;
         private float _damage;
+        private TowerUnit _owner; // 명중 처리를 맡길 타워 - 처치 게이지/스킬 훅(OnBasicHit/OnKill)이 평타 경로와 똑같이 돌게 함
 
-        public void Launch(MonsterPathFollower target, float damage)
+        public void Launch(MonsterPathFollower target, float damage, TowerUnit owner)
         {
             _target = target;
             _damage = damage;
+            _owner = owner;
         }
 
         private void Update()
@@ -52,12 +54,17 @@ namespace TowerDefense.Map
 
             if (Vector3.Distance(transform.position, targetPos) <= hitDistance)
             {
-                _target.TakeDamage(_damage);
-                // [버그 수정 - 2026-09-29] TowerUnit.cs 히트스캔 경로와 동일한 시각 피드백 -
-                // 지금은 실제로 쓰이는 투사체 프리팹이 없어서(Tower_Generic.prefab의
-                // projectilePrefab이 비어있음) 당장 발동하진 않지만, 나중에 투사체가 실제로
-                // 쓰이게 되면 동일하게 "맞았다"는 걸 보여줘야 하므로 미리 맞춰둠.
-                _target.PlayHitFlashRpc();
+                // 타워가 있으면 타워의 평타 명중 처리(히트 플래시 → 피해 → 게이지/스킬 훅)에 위임함.
+                // (예전엔 TakeDamage 뒤에 PlayHitFlashRpc를 불러, 막타면 이미 반납된 몬스터에 RPC를 보내는 순서였음)
+                if (_owner != null)
+                {
+                    _owner.ResolveBasicHit(_target, _damage);
+                }
+                else
+                {
+                    _target.PlayHitFlashRpc();
+                    _target.TakeDamage(_damage);
+                }
                 DespawnSelf();
             }
         }

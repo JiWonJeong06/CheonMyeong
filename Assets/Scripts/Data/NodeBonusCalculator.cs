@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace TowerDefense.Data
 {
@@ -25,6 +26,26 @@ namespace TowerDefense.Data
                 speedPercent += tree.GetBonusPercent(NodeEffectType.LineAttackSpeedPercent, line, unlockedOverride);
             }
             return TowerStatModifiers.Compute(level, attackPercent, speedPercent);
+        }
+
+        /// <summary>
+        /// 소속 라인 노드의 "SP 강화 가격 -n%" 합(0~100). 무소속은 소속 효과를 받지 않아 0.
+        /// 서버(강화 비용 차감)와 인게임 강화 버튼(표시 가격)이 같은 식을 쓰도록 공용으로 둠.
+        /// </summary>
+        public static float GetEnhanceDiscountPercent(CharacterDataSO character, HashSet<string> unlockedOverride = null)
+        {
+            var tree = TechTreeManager.Instance;
+            if (character == null || tree == null || !NodeTreeLines.ReceivesLineEffect(character.code)) return 0f;
+
+            string line = NodeTreeLines.GetLine(character.code);
+            float percent = tree.GetBonusPercent(NodeEffectType.LineEnhancePriceDiscountPercent, line, unlockedOverride);
+            return Mathf.Clamp(percent, 0f, 100f);
+        }
+
+        /// <summary>기본 강화 가격에 감소율(%)을 적용한 실제 가격(반올림, 0 이상).</summary>
+        public static int ApplyEnhanceDiscount(int baseCost, float discountPercent)
+        {
+            return Mathf.Max(0, Mathf.RoundToInt(baseCost * (1f - discountPercent / 100f)));
         }
     }
 }

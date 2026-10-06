@@ -31,7 +31,7 @@ namespace TowerDefense.Monsters
         public string waveName;
 
         [Tooltip("이전 웨이브 종료(또는 게임 시작) 후 이 웨이브가 시작되기까지 대기 시간(초)")]
-        public float delayBeforeWave = 5f;
+        public float delayBeforeWave = 10f;
 
         [Tooltip("이 웨이브가 진행되는 시간(초) - 기획서 기준 80초. 이 시간 동안 ownMonsterCount만큼 " +
                   "가중치 랜덤으로 균등 간격 스폰함.")]

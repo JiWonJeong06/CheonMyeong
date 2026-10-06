@@ -49,6 +49,13 @@ namespace TowerDefense.UI
         private VisualElement _visionBlockOverlay;
         private Coroutine _visionBlockRoutine;
 
+        // 웨이브 시작 전 카운트다운(화면 중앙) - 숫자 텍스트는 값이 바뀔 때만 갱신함(프레임마다 문자열을 만들지 않음).
+        private VisualElement _waveCountdownRoot;
+        private Label _waveCountdownTitle;
+        private Label _waveCountdownNumber;
+        private Coroutine _waveCountdownRoutine;
+        private System.Action<int, float> _waveCountdownHandler;
+
         private PlayerBoard _myBoard;
         private PlayerBoard _enemyBoard;
 
@@ -94,6 +101,9 @@ namespace TowerDefense.UI
 
             _seasonWeatherLabel = root.Q<Label>("season-weather-label");
             _visionBlockOverlay = root.Q<VisualElement>("vision-block-overlay");
+            _waveCountdownRoot = root.Q<VisualElement>("wave-countdown-root");
+            _waveCountdownTitle = root.Q<Label>("wave-countdown-title");
+            _waveCountdownNumber = root.Q<Label>("wave-countdown-number");
 
             _pauseButton = root.Q<Button>("pause-button");
             _pauseButton.clicked += OnPauseClicked;
@@ -129,6 +139,11 @@ namespace TowerDefense.UI
             {
                 StopCoroutine(_visionBlockRoutine);
                 _visionBlockRoutine = null;
+            }
+            if (_waveCountdownRoutine != null)
+            {
+                StopCoroutine(_waveCountdownRoutine);
+                _waveCountdownRoutine = null;
             }
             Unbind();
         }
@@ -225,6 +240,9 @@ namespace TowerDefense.UI
             // 낙엽 날씨 시야 가림 연출 - MatchController가 웨이브마다 낙엽이 뽑혔을 때만 1회 브로드캐스트함.
             _visionBlockHandler = OnVisionBlockStarted;
             mc.OnVisionBlockStarted += _visionBlockHandler;
+
+            _waveCountdownHandler = OnWaveCountdownStarted;
+            mc.OnWaveCountdownStarted += _waveCountdownHandler;
         }
 
         private void Unbind()
@@ -236,6 +254,7 @@ namespace TowerDefense.UI
             if (_boundSeasonVar != null && _seasonHandler != null) _boundSeasonVar.OnValueChanged -= _seasonHandler;
             if (_boundWeatherVar != null && _weatherHandler != null) _boundWeatherVar.OnValueChanged -= _weatherHandler;
             if (MatchController.Instance != null && _visionBlockHandler != null) MatchController.Instance.OnVisionBlockStarted -= _visionBlockHandler;
+            if (MatchController.Instance != null && _waveCountdownHandler != null) MatchController.Instance.OnWaveCountdownStarted -= _waveCountdownHandler;
 
             _boundMyHpVar = null;
             _boundEnemyHpVar = null;
@@ -250,6 +269,38 @@ namespace TowerDefense.UI
             _seasonHandler = null;
             _weatherHandler = null;
             _visionBlockHandler = null;
+            _waveCountdownHandler = null;
+        }
+
+        // 웨이브 시작 전 대기(서버가 알려준 초)를 화면 중앙에 "웨이브 N 시작까지" + 남은 초로 표시함. 서버 타이머와 같은 Time.time 기준.
+        private void OnWaveCountdownStarted(int waveNumber, float seconds)
+        {
+            if (_waveCountdownRoot == null || seconds <= 0f) return;
+            if (_waveCountdownRoutine != null) StopCoroutine(_waveCountdownRoutine);
+            _waveCountdownRoutine = StartCoroutine(WaveCountdownRoutine(waveNumber, seconds));
+        }
+
+        private IEnumerator WaveCountdownRoutine(int waveNumber, float seconds)
+        {
+            _waveCountdownTitle.text = $"웨이브 {waveNumber} 시작까지";
+            _waveCountdownRoot.style.display = DisplayStyle.Flex;
+
+            float endTime = Time.time + seconds;
+            int shown = -1;
+            while (true)
+            {
+                int remaining = Mathf.CeilToInt(endTime - Time.time);
+                if (remaining <= 0) break;
+                if (remaining != shown)
+                {
+                    shown = remaining;
+                    _waveCountdownNumber.text = remaining.ToString();
+                }
+                yield return null;
+            }
+
+            _waveCountdownRoot.style.display = DisplayStyle.None;
+            _waveCountdownRoutine = null;
         }
 
         // 화면 텍스트는 "봄 · 미세먼지"처럼 계절/날씨를 한글로 표시함(전용 아이콘 에셋이 아직

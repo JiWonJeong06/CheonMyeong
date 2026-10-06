@@ -125,3 +125,31 @@
     transition-property: opacity;
     transition-duration: 0.4s;
 }
+
+/* 웨이브 시작 전 대기 카운트다운 - 화면(보드 영역) 중앙에 크게 표시. 오른쪽 160px은 덱 패널 폭(.deck-root)과 같아야 함.
+   클릭을 막지 않도록 picking-mode는 Ignore. 평소엔 숨김(InGameHUDController가 display를 토글함). */
+.wave-countdown-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 160px;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    display: none;
+}
+
+.wave-countdown-title {
+    font-size: 28px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.9);
+    margin-bottom: 4px;
+}
+
+.wave-countdown-number {
+    font-size: 96px;
+    -unity-font-style: bold;
+    color: rgb(255, 210, 80);
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+}

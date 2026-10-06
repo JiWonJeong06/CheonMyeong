@@ -57,3 +57,34 @@
     -unity-text-align: middle-center;
     white-space: normal;
 }
+
+/* 카드 안쪽 하단의 SP 강화 버튼 - 현재 강화 레벨과 다음 강화 가격을 보여줌(InGameDeckController가 코드로 추가함). */
+.deck-enhance {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    height: 24px;
+    margin: 0;
+    padding: 0;
+    border-width: 1px;
+    border-color: rgb(255, 210, 80);
+    border-radius: 6px;
+    background-color: rgba(60, 40, 0, 0.85);
+    color: rgb(255, 210, 80);
+    font-size: 11px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+/* SP가 모자라 지금 강화할 수 없음 - 클릭은 막지 않고(서버가 최종 판정) 흐리게만 표시함. */
+.deck-enhance-unaffordable {
+    opacity: 0.45;
+}
+
+/* 최대 강화(Lv5) */
+.deck-enhance-max {
+    border-color: rgba(255, 255, 255, 0.35);
+    background-color: rgba(40, 40, 40, 0.85);
+    color: rgba(255, 255, 255, 0.7);
+}

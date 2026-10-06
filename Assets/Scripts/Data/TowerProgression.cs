@@ -8,7 +8,7 @@ namespace TowerDefense.Data
     /// 이 파일의 숫자/식만 바꾸면 합성·강화 밸런스가 바뀌도록 로직(RPC/입력)과 분리해 둠(담당: 정지원 PART B 조정용).
     ///
     /// 규칙 요약
-    /// - 강화: 캐릭터 종류별 Lv1~5(소환 직후 Lv1). 구간 가격 500/1000/2500/5000. 진행도 P = 구간 가격의 제곱근 누적 비율,
+    /// - 강화: 캐릭터 종류별 Lv1~5(소환 직후 Lv1). 구간 원가 500/1000/2500/5000(실제 지불은 1/2). 진행도 P = 구간 가격의 제곱근 누적 비율,
     ///   DPS 배율 D = 1 + 0.5 × P (Lv5 = 1.5배). 공격력형은 공격력 × D, 공속형은 Lv5에서 공격력 × D^0.6, 간격 × D^-0.4가 되도록 P에 따라 변함.
     /// - 합성: 같은 캐릭터 + 같은 별끼리 별 +1(최대 5★). 별당 증가량은 캐릭터 스탯 H·I열(CharacterDataSO.starAttackPower/starAttackInterval).
     /// - 최종 피해/간격 = (합성·강화 반영 값) × 노드 트리 계층 배율(TowerStatModifiers) × 날씨.
@@ -23,8 +23,12 @@ namespace TowerDefense.Data
         private const float SpeedTypeDpsToInterval = 0.4f; // 40%를 공격 간격으로
         private const float MinInterval = 0.05f;
 
-        // Lv1→2, 2→3, 3→4, 4→5 구간 가격(기준값 시트 - A안 확정)
+        // Lv1→2, 2→3, 3→4, 4→5 구간 가격(기준값 시트 - A안 확정). 진행도 P(효과 가중치)는 이 원가의 비율로 계산함.
         private static readonly int[] StepPrices = { 500, 1000, 2500, 5000 };
+
+        // [기획 확정 - 2026-10-06] 인게임 SP 강화 실제 지불 가격은 원가의 1/2(250/500/1250/2500). 가격 비율이 그대로라
+        // 진행도 P·강화 배율은 변하지 않으므로 StepPrices(원가)는 건드리지 않고 지불 시점에만 곱함. 소속 가격 감소 노드는 이 값에 다시 적용됨.
+        private const float InGameEnhanceCostRatio = 0.5f;
 
         // 레벨별 진행도 P(인덱스 0 = Lv1 → 0, Lv5 → 1). 정적 초기화 한 번만 계산해 매 호출 할당/계산이 없음.
         private static readonly float[] EnhanceProgress = BuildEnhanceProgress();
@@ -50,11 +54,11 @@ namespace TowerDefense.Data
             return table;
         }
 
-        /// <summary>현재 강화 레벨에서 다음 레벨로 올리는 데 드는 기본 SP. 최대 레벨이면 -1.</summary>
+        /// <summary>현재 강화 레벨에서 다음 레벨로 올리는 데 드는 기본 SP(원가 × 1/2, 노드 할인 적용 전). 최대 레벨이면 -1.</summary>
         public static int GetEnhanceCost(int currentLevel)
         {
             currentLevel = Mathf.Clamp(currentLevel, 1, MaxEnhanceLevel);
-            return currentLevel >= MaxEnhanceLevel ? -1 : StepPrices[currentLevel - 1];
+            return currentLevel >= MaxEnhanceLevel ? -1 : Mathf.RoundToInt(StepPrices[currentLevel - 1] * InGameEnhanceCostRatio);
         }
 
         /// <summary>강화 레벨의 DPS 배율(Lv1 = 1, Lv5 = 1.5).</summary>

@@ -42,4 +42,8 @@
         </ui:VisualElement>
     </ui:VisualElement>
     <ui:VisualElement name="vision-block-overlay" class="vision-block-overlay" picking-mode="Ignore"/>
+    <ui:VisualElement name="wave-countdown-root" class="wave-countdown-root" picking-mode="Ignore">
+        <ui:Label name="wave-countdown-title" text="" class="wave-countdown-title" picking-mode="Ignore"/>
+        <ui:Label name="wave-countdown-number" text="" class="wave-countdown-number" picking-mode="Ignore"/>
+    </ui:VisualElement>
 </ui:UXML>

@@ -54,6 +54,53 @@ namespace TowerDefense.Map
             OnSPChanged?.Invoke(CurrentSP);
         }
 
+        // ===== SP 수입 보너스 (천희재 '수입': 30초마다 10초 동안 처치 SP +n%) =====
+        private struct IncomeBuff
+        {
+            public object key;
+            public float percent;
+            public float expireAt;
+        }
+        private readonly System.Collections.Generic.List<IncomeBuff> _incomeBuffs = new(2);
+
+        /// <summary>[서버 전용] 처치 SP 수입 +percent%를 duration초 동안 건다. 같은 key로 다시 걸면 갱신, 다른 key끼리는 합산.</summary>
+        public void SetIncomeBonus(object key, float percent, float duration)
+        {
+            if (!IsAuthoritative || key == null) return;
+            float expireAt = Time.time + duration;
+            for (int i = 0; i < _incomeBuffs.Count; i++)
+            {
+                if (_incomeBuffs[i].key.Equals(key))
+                {
+                    _incomeBuffs[i] = new IncomeBuff { key = key, percent = percent, expireAt = expireAt };
+                    return;
+                }
+            }
+            _incomeBuffs.Add(new IncomeBuff { key = key, percent = percent, expireAt = expireAt });
+        }
+
+        /// <summary>지금 적용 중인 SP 수입 보너스 합(%). 만료된 항목은 이때 정리함.</summary>
+        public float IncomeBonusPercent
+        {
+            get
+            {
+                float now = Time.time;
+                float sum = 0f;
+                for (int i = _incomeBuffs.Count - 1; i >= 0; i--)
+                {
+                    if (now >= _incomeBuffs[i].expireAt) _incomeBuffs.RemoveAt(i);
+                    else sum += _incomeBuffs[i].percent;
+                }
+                return sum;
+            }
+        }
+
+        /// <summary>[서버 전용] 몬스터 처치 보상 지급 - 수입 보너스를 곱해서 AddSP. (환불 같은 보상이 아닌 SP는 AddSP를 그대로 씀)</summary>
+        public void AddRewardSP(float amount)
+        {
+            AddSP(amount * (1f + IncomeBonusPercent / 100f));
+        }
+
         /// <summary>[서버 전용] 소환이 실제로 성공한 뒤 1회 호출 - 다음 소환 가격을 +10 올림.</summary>
         public void CommitSummon()
         {

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Wave_03
   m_EditorClassIdentifier: Assembly-CSharp::TowerDefense.Monsters.WaveDataSO
   waveName: "Wave 03 (\uC120\uD615\uBCF4\uAC04 placeholder)"
-  delayBeforeWave: 5
+  delayBeforeWave: 10
   waveDuration: 80
   ownMonsterCount: 150
   monsterPool:

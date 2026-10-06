@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using Unity.Netcode;
 using TowerDefense.Data;
+using TowerDefense.Map;
 
 namespace TowerDefense.Monsters
 {
@@ -56,6 +57,28 @@ namespace TowerDefense.Monsters
         private int _waypointIndex;
         private float _currentHp;
 
+        // ===== 상태이상 (서버 전용, 풀링 재사용 때 Init에서 초기화) =====
+        // 규칙(엑셀 구현 규칙): 기절 중 다시 걸리면 새 시간으로 갱신 / 감속은 겹치면 가장 센 것 하나만 / 화상은 모든 보스 면역.
+        private float _stunUntil;
+        private float _burnUntil;            // 0 = 화상 없음
+        private float _burnPercentPerSec;
+        private TowerUnit _burnOwner;        // 화상으로 죽으면 처치 게이지를 줄 타워
+        private TowerUnit _assistSource;     // 버프형 효과를 건 타워 - 5초 안에 죽으면 어시스트 게이지
+        private float _assistUntil;
+
+        private struct SlowSlot
+        {
+            public int key;        // 거는 쪽(보통 타워 InstanceID) - 같은 key로 다시 걸면 갱신
+            public float percent;
+            public float expireAt;
+        }
+        private readonly SlowSlot[] _slows = new SlowSlot[4];
+
+        private static int s_spawnSerialCounter;
+
+        // 스킬 스택(까마귀 등). 종류별 정수 하나 - 풀링 재사용 때 Init에서 0으로 되돌림. 할당 없음(고정 배열 1개).
+        private readonly int[] _stacks = new int[MonsterStackTypeInfo.Count];
+
         // [버그 수정 - 2026-09-29] 히트스캔 공격(TowerUnit.Attack, projectilePrefab 없는 경로)이
         // TakeDamage를 직접 불러서 데미지만 조용히 반영하고 아무 시각 효과도 없었음 - 그래서 실제로는
         // 정상적으로 공격/피해가 들어가고 있어도 화면상으로는 "타워가 몬스터를 안 잡는 것처럼" 보임
@@ -98,6 +121,25 @@ namespace TowerDefense.Monsters
         public MonsterDataSO Data => _data;
         public MonsterSpawner Spawner => _spawner;
         public float CurrentHp => _currentHp;
+        public float MaxHp => _actualMaxHp;
+
+        /// <summary>풀에서 꺼내 Init될 때마다 새 값 - 풀링으로 같은 인스턴스가 재사용돼도 "다른 몬스터"인지 구분하는 용도(레이저 조준 유지 등).</summary>
+        public int SpawnSerial { get; private set; }
+        public bool IsBoss => _data != null && _data.isBoss;
+
+        /// <summary>[서버 전용] 스킬 스택 수. 0이면 없음.</summary>
+        public int GetStacks(MonsterStackType type) => _stacks[(int)type];
+
+        /// <summary>[서버 전용] 스택을 add만큼 쌓고(최대 max에서 멈춤) 쌓인 뒤의 값을 돌려줌.</summary>
+        public int AddStacks(MonsterStackType type, int add, int max)
+        {
+            int i = (int)type;
+            _stacks[i] = Mathf.Min(max, _stacks[i] + Mathf.Max(0, add));
+            return _stacks[i];
+        }
+
+        /// <summary>[서버 전용] 해당 종류 스택을 전부 제거.</summary>
+        public void ClearStacks(MonsterStackType type) => _stacks[(int)type] = 0;
 
         /// <summary>경로 진행도 - 클수록 기지에 가까움(타워 우선순위 "맨 앞" 판정용). 웨이포인트 인덱스가 주, 다음
         /// 웨이포인트까지 남은 거리가 부(가까울수록 큼). 매 호출 할당 없음.</summary>
@@ -179,6 +221,14 @@ namespace TowerDefense.Monsters
             _waypointIndex = 0;
             _currentHp = actualMaxHp;
             _actualMaxHp = actualMaxHp;
+            System.Array.Clear(_stacks, 0, _stacks.Length);
+            System.Array.Clear(_slows, 0, _slows.Length);
+            _stunUntil = 0f;
+            _burnUntil = 0f;
+            _burnOwner = null;
+            _assistSource = null;
+            _assistUntil = 0f;
+            SpawnSerial = ++s_spawnSerialCounter;
             _isTransferred = isTransferred;
             _cellSize = cellSize > 0f ? cellSize : 1f;
 
@@ -219,8 +269,14 @@ namespace TowerDefense.Monsters
             ApplyPollenHealIfNeeded();
             ApplyHailDotIfNeeded();
             if (!IsAlive) return; // 우박 도트로 이번 프레임에 죽었으면(Die()가 이미 반납 처리함) 더 진행 안 함
+            ApplyBurnIfNeeded();
+            if (!IsAlive) return; // 화상으로 죽은 경우
 
             if (_waypoints == null || _waypointIndex >= _waypoints.Length) return;
+
+            // 기절 중이거나 방패 벽(전민재 궁극기)에 막혀 있으면 이동하지 않음
+            if (Time.time < _stunUntil) return;
+            if (_spawner != null && _spawner.IsBlockedAt(transform.position)) return;
 
             // moveSpeedMultiplier 반영(기획 기준: 병사=1, 기마병사=1.6, 방패병사=0.6) - 예전엔 이
             // 배율이 계산에서 빠져있었음(MonsterDataSO에 필드만 추가되고 실제 이동 계산엔 안 쓰임).
@@ -228,6 +284,10 @@ namespace TowerDefense.Monsters
             Vector3 target = _waypoints[_waypointIndex].position;
             // moveSpeed는 "칸/초" 단위(엑셀 속도값 ÷ 10) - 월드 속도 = 칸/초 × 칸 크기.
             float speed = _data.moveSpeed * _data.moveSpeedMultiplier * _cellSize * WeatherEffectTable.MoveSpeedMultiplier(_spawnWeather);
+
+            // 진혜영 붓(상대 보드 몬스터 이동속도 +n%)과 감속(가장 센 것 하나, 최대 100%)
+            float speedBonus = _spawner != null ? _spawner.MoveSpeedBonusPercent : 0f;
+            speed *= (1f + speedBonus / 100f) * (1f - CurrentSlowPercent() / 100f);
             transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
 
             if (Vector3.Distance(transform.position, target) < 0.05f)
@@ -240,23 +300,177 @@ namespace TowerDefense.Monsters
             }
         }
 
-        /// <summary>[서버 전용] TowerUnit.Attack과 ApplyHailDotIfNeeded에서 호출됨. 비 날씨로 부여된
+        /// <summary>[서버 전용] 피해를 줌 - 이 호출로 죽었으면 true. TowerUnit.DealDamage와 ApplyHailDotIfNeeded에서 호출됨. 비 날씨로 부여된
         /// 보호막(_shield)이 남아있으면 먼저 흡수하고, 남은 데미지만 체력에 적용함.</summary>
-        public void TakeDamage(float amount)
+        public bool TakeDamage(float amount)
         {
-            if (!IsServer) return;
-            if (!IsAlive) return; // 이미 죽고 반납 대기 중인 개체에 중복 데미지가 들어오는 걸 방지
+            if (!IsServer) return false;
+            if (!IsAlive) return false; // 이미 죽고 반납 대기 중인 개체에 중복 데미지가 들어오는 걸 방지
 
             if (_shield > 0f)
             {
                 float absorbed = Mathf.Min(_shield, amount);
                 _shield -= absorbed;
                 amount -= absorbed;
-                if (amount <= 0f) return; // 보호막이 전부 흡수함
+                if (amount <= 0f) return false; // 보호막이 전부 흡수함
             }
 
             _currentHp -= amount;
-            if (_currentHp <= 0f) Die();
+            if (_currentHp > 0f) return false;
+
+            Die();
+            return true; // 이 호출로 죽음 - 호출한 타워가 처치 게이지/OnKill 처리에 씀
+        }
+
+        /// <summary>[서버 전용] 처형(즉사) - 보호막을 무시하고 바로 죽임. 보스 제외 같은 조건 판단은 호출하는 스킬 몫.
+        /// 이 호출로 죽였으면 true. 죽으면 풀에 반납되므로 호출 후 이 개체를 계속 쓰지 말 것.</summary>
+        public bool ForceKill()
+        {
+            if (!IsServer || !IsAlive) return false;
+            _currentHp = 0f;
+            Die();
+            return true;
+        }
+
+        // ===== 상태이상 API (전부 서버 전용 - 스킬 클래스가 호출) =====
+
+        public bool IsStunned => Time.time < _stunUntil;
+
+        /// <summary>기절 - 이동 정지. 이미 기절 중이면 남은 시간이 아니라 새 시간으로 갱신함. 보스도 걸림(스킬 설명에 '보스 제외'가 없는 한).</summary>
+        public void ApplyStun(float seconds)
+        {
+            if (!IsServer || !IsAlive || seconds <= 0f) return;
+            _stunUntil = Time.time + seconds;
+        }
+
+        /// <summary>감속 - percent는 "30 = 이동속도 30% 감소". 같은 key로 다시 걸면 갱신, 여러 개가 겹치면 가장 센 것 하나만 적용됨.</summary>
+        public void ApplySlow(int key, float percent, float seconds)
+        {
+            if (!IsServer || !IsAlive || percent <= 0f || seconds <= 0f) return;
+
+            float now = Time.time;
+            int free = -1;
+            int weakest = -1;
+            for (int i = 0; i < _slows.Length; i++)
+            {
+                if (_slows[i].expireAt > now)
+                {
+                    if (_slows[i].key == key)
+                    {
+                        _slows[i].percent = percent;
+                        _slows[i].expireAt = now + seconds;
+                        return;
+                    }
+                    if (weakest < 0 || _slows[i].percent < _slows[weakest].percent) weakest = i;
+                }
+                else if (free < 0)
+                {
+                    free = i;
+                }
+            }
+
+            int slot = free;
+            if (slot < 0)
+            {
+                if (weakest < 0 || _slows[weakest].percent >= percent) return; // 슬롯이 다 차 있고 더 센 감속뿐이면 무시
+                slot = weakest;
+            }
+            _slows[slot] = new SlowSlot { key = key, percent = percent, expireAt = now + seconds };
+        }
+
+        /// <summary>지금 적용 중인 감속 중 가장 센 값(%).</summary>
+        public float CurrentSlowPercent()
+        {
+            float now = Time.time;
+            float best = 0f;
+            for (int i = 0; i < _slows.Length; i++)
+            {
+                if (_slows[i].expireAt > now && _slows[i].percent > best) best = _slows[i].percent;
+            }
+            return Mathf.Min(best, 100f);
+        }
+
+        /// <summary>화상 - 지속 시간 동안 초당 최대 체력의 percentPerSec% 피해. 모든 보스 면역(엑셀 구현 규칙).
+        /// 더 센 화상은 덮어쓰고 같거나 약하면 지속 시간만 갱신. owner는 화상으로 죽였을 때 처치 게이지를 받음.</summary>
+        public void ApplyBurn(TowerUnit owner, float percentPerSec, float seconds)
+        {
+            if (!IsServer || !IsAlive || IsBoss || percentPerSec <= 0f || seconds <= 0f) return;
+
+            float now = Time.time;
+            bool active = _burnUntil > now;
+            if (!active || percentPerSec >= _burnPercentPerSec)
+            {
+                _burnPercentPerSec = percentPerSec;
+                _burnOwner = owner;
+            }
+            _burnUntil = Mathf.Max(_burnUntil, now + seconds);
+        }
+
+        private void ApplyBurnIfNeeded()
+        {
+            if (_burnUntil <= 0f) return;
+            if (Time.time >= _burnUntil)
+            {
+                _burnUntil = 0f;
+                _burnOwner = null;
+                return;
+            }
+
+            var owner = _burnOwner;
+            float damage = _actualMaxHp * _burnPercentPerSec / 100f * Time.deltaTime;
+            if (TakeDamage(damage) && owner != null) owner.CreditKill(this);
+        }
+
+        /// <summary>체력 회복(최대 체력까지) - 유하린 '작은 별'의 피해→회복 전환용.</summary>
+        public void Heal(float amount)
+        {
+            if (!IsServer || !IsAlive || amount <= 0f) return;
+            _currentHp = Mathf.Min(_actualMaxHp, _currentHp + amount);
+        }
+
+        /// <summary>버프형 효과를 걸었다고 표시 - 이후 seconds 안에 죽으면 source에 어시스트 게이지가 감.</summary>
+        public void MarkSupportEffect(TowerUnit source, float seconds = 5f)
+        {
+            if (!IsServer || source == null) return;
+            _assistSource = source;
+            _assistUntil = Time.time + seconds;
+        }
+
+        /// <summary>경로를 거슬러 뒤로 밂(밀어내기). distance는 월드 거리 - 경로 전체 길이의 n%는 PushBackPathPercent 사용. 시작점에서 멈춤.</summary>
+        public void PushBackAlongPath(float distance)
+        {
+            if (!IsServer || !IsAlive || _waypoints == null || distance <= 0f) return;
+
+            Vector3 pos = transform.position;
+            int idx = Mathf.Min(_waypointIndex, _waypoints.Length - 1);
+            float remaining = distance;
+            while (remaining > 0f && idx > 0)
+            {
+                Vector3 prev = _waypoints[idx - 1].position;
+                float d = Vector3.Distance(pos, prev);
+                if (d > remaining)
+                {
+                    pos = Vector3.MoveTowards(pos, prev, remaining);
+                    remaining = 0f;
+                }
+                else
+                {
+                    pos = prev;
+                    remaining -= d;
+                    idx--;
+                }
+            }
+            if (idx == 0 && remaining > 0f) pos = _waypoints[0].position;
+
+            _waypointIndex = idx;
+            transform.position = pos;
+        }
+
+        /// <summary>경로 전체 길이의 percent%만큼 뒤로 밂(엑셀 '밀어내기').</summary>
+        public void PushBackPathPercent(float percent)
+        {
+            if (_spawner == null) return;
+            PushBackAlongPath(_spawner.PathLength * percent / 100f);
         }
 
         // 꽃가루 날씨: 체력이 최대체력의 50% 미만이면 즉시 풀피로 1회만 회복시킴(_pollenHealed로
@@ -316,6 +530,9 @@ namespace TowerDefense.Monsters
 
         private void Die()
         {
+            // 버프형 어시스트: 버프형 효과가 걸린 몬스터가 5초 안에 죽으면 효과를 건 타워에 게이지(+1, 초당 최대 +5)
+            if (_assistSource != null && Time.time < _assistUntil) _assistSource.AddAssist();
+
             _spawner.NotifyMonsterKilled(_data); // 처치 SP 지급(이 몬스터가 속한 보드의 지갑으로)
 
             // TODO(경제 시스템): 예전엔 여기서 EconomyManager.Instance.AddGold(_data.goldReward)를

@@ -46,6 +46,13 @@ namespace TowerDefense.UI
         private bool _reservedFractionReported;
 
         private readonly Button[] _slotButtons = new Button[DeckManager.DeckSize];
+
+        // [SP 강화] 각 카드 하단의 강화 버튼. 가격/레벨 텍스트는 레벨이 바뀔 때만 다시 만들고(문자열 할당 최소화),
+        // SP가 바뀔 때는 캐시한 가격으로 클래스만 토글함(처치마다 SP가 바뀌므로 이 경로는 할당이 없어야 함).
+        private const string EnhanceUnaffordableClass = "deck-enhance-unaffordable";
+        private const string EnhanceMaxClass = "deck-enhance-max";
+        private readonly Button[] _enhanceButtons = new Button[DeckManager.DeckSize];
+        private readonly int[] _enhanceCost = new int[DeckManager.DeckSize]; // 다음 강화 실제 가격, 최대 레벨이면 0
         private readonly CharacterDataSO[] _slotData = new CharacterDataSO[DeckManager.DeckSize];
 
         private int _selectedIndex = -1;
@@ -88,9 +95,18 @@ namespace TowerDefense.UI
 
                 _slotButtons[i] = button;
                 button.clicked += () => OnSlotClicked(capturedIndex);
+
+                // 카드 안쪽 하단에 강화 버튼을 코드로 붙임(UXML 구조를 안 건드림). 자식 버튼의 클릭은 부모 카드 클릭으로
+                // 전파되지 않음(Clickable이 포인터 다운을 소비함).
+                var enhance = new Button { name = $"deck-enhance-{i}" };
+                enhance.AddToClassList("deck-enhance");
+                enhance.clicked += () => OnEnhanceClicked(capturedIndex);
+                button.Add(enhance);
+                _enhanceButtons[i] = enhance;
             }
 
             PopulateSlots();
+            RefreshEnhanceTexts();
             _bindRoutine = StartCoroutine(BindWhenReady());
         }
 
@@ -263,14 +279,26 @@ namespace TowerDefense.UI
             _boundMyCostVar.OnValueChanged += _myCostHandler;
             _lastCost = _boundMyCostVar.Value;
 
+            mc.OnEnhanceLevelChanged += OnEnhanceLevelChanged;
+            _enhanceSubscribed = true;
+            RefreshEnhanceTexts();
+
             RefreshAffordability(_boundMySpVar.Value); // 구독 시점의 현재값은 OnValueChanged가 안 불러주므로 최초 1회 직접 반영
             RefreshSpSpentLabel();
 
             _bindRoutine = null;
         }
 
+        private bool _enhanceSubscribed;
+
         private void Unbind()
         {
+            if (_enhanceSubscribed && MatchController.Instance != null)
+            {
+                MatchController.Instance.OnEnhanceLevelChanged -= OnEnhanceLevelChanged;
+            }
+            _enhanceSubscribed = false;
+
             if (_boundMySpVar != null && _mySpHandler != null)
             {
                 _boundMySpVar.OnValueChanged -= _mySpHandler;
@@ -289,15 +317,93 @@ namespace TowerDefense.UI
         private void RefreshSpSpentLabel()
         {
             if (_spSpentLabel == null) return;
-            // 누적 소모량은 소환 횟수 n = (현재 가격 - 100) / 10에서 역산: 100n + 10 × n(n-1)/2
-            int n = (_lastCost - MatchResourceManager.SummonBaseCost) / MatchResourceManager.SummonCostStep;
-            int spent = MatchResourceManager.SummonBaseCost * n + MatchResourceManager.SummonCostStep * n * (n - 1) / 2;
-            _spSpentLabel.text = $"SP 소모: {spent} (다음 {_lastCost})";
+            // 다음 소환에 드는 SP만 표시함(이미 쓴 누적량은 표시하지 않음). 소환할 때마다 +10 올라감(100 → 110 → 120 ...).
+            // 서버가 복제한 BoardSummonCost를 그대로 보여줌.
+            _spSpentLabel.text = $"다음 소환 SP: {_lastCost}";
+        }
+
+        private void OnEnhanceLevelChanged(int boardIndex, string characterId, int level)
+        {
+            if (_myBoard == null || boardIndex != _myBoard.BoardIndex) return;
+            RefreshEnhanceTexts();
+        }
+
+        // 카드별 강화 레벨/다음 가격 텍스트를 다시 만듦 - 레벨이 바뀌거나 매치에 바인딩될 때만 호출함.
+        // 가격은 서버와 같은 계산기(NodeBonusCalculator)로 이 기기의 노드 해금 상태 기준 감소율을 반영함.
+        private void RefreshEnhanceTexts()
+        {
+            var mc = MatchController.Instance;
+            for (int i = 0; i < DeckManager.DeckSize; i++)
+            {
+                var button = _enhanceButtons[i];
+                if (button == null) continue;
+
+                var data = _slotData[i];
+                if (data == null)
+                {
+                    button.style.display = DisplayStyle.None;
+                    _enhanceCost[i] = 0;
+                    continue;
+                }
+                button.style.display = DisplayStyle.Flex;
+
+                int level = (mc != null && _myBoard != null) ? mc.GetEnhanceLevel(_myBoard.BoardIndex, data.characterId) : 1;
+                int baseCost = TowerProgression.GetEnhanceCost(level);
+                if (baseCost <= 0)
+                {
+                    _enhanceCost[i] = 0;
+                    button.text = $"Lv{level} MAX";
+                    button.AddToClassList(EnhanceMaxClass);
+                    button.RemoveFromClassList(EnhanceUnaffordableClass);
+                    continue;
+                }
+
+                button.RemoveFromClassList(EnhanceMaxClass);
+                int cost = NodeBonusCalculator.ApplyEnhanceDiscount(baseCost, NodeBonusCalculator.GetEnhanceDiscountPercent(data));
+                _enhanceCost[i] = cost;
+                button.text = $"Lv{level} · 강화 {cost}";
+            }
+            RefreshEnhanceAffordability(_lastSp);
+        }
+
+        // SP가 바뀔 때마다 호출됨(처치 보상으로 자주 바뀜) - 문자열을 만들지 않고 클래스만 토글함.
+        private void RefreshEnhanceAffordability(float currentSP)
+        {
+            for (int i = 0; i < DeckManager.DeckSize; i++)
+            {
+                var button = _enhanceButtons[i];
+                if (button == null || _slotData[i] == null || _enhanceCost[i] <= 0) continue;
+
+                if (currentSP < _enhanceCost[i]) button.AddToClassList(EnhanceUnaffordableClass);
+                else button.RemoveFromClassList(EnhanceUnaffordableClass);
+            }
+        }
+
+        private void OnEnhanceClicked(int index)
+        {
+            var data = _slotData[index];
+            var mc = MatchController.Instance;
+            if (data == null || mc == null || _myBoard == null) return;
+
+            if (_enhanceCost[index] <= 0)
+            {
+                ToastController.Instance?.Show("이미 최대 강화입니다");
+                return;
+            }
+            if (mc.GetBoardSp(_myBoard.BoardIndex) < _enhanceCost[index])
+            {
+                ToastController.Instance?.Show("SP가 부족합니다");
+                return;
+            }
+
+            // 최종 SP 차감/레벨 반영은 서버가 함. 결과는 OnEnhanceLevelChanged로 돌아와 버튼 텍스트가 갱신됨.
+            mc.RequestEnhanceRpc(_myBoard.BoardIndex, data.characterId);
         }
 
         private void RefreshAffordability(float currentSP)
         {
             _lastSp = currentSP;
+            RefreshEnhanceAffordability(currentSP);
             bool affordable = currentSP >= _lastCost;
             for (int i = 0; i < DeckManager.DeckSize; i++)
             {

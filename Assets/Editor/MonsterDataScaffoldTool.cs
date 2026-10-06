@@ -270,7 +270,7 @@ namespace TowerDefense.EditorTools
                 }
 
                 so.waveName = $"Wave {point.wave:D2}" + (point.isAnchor ? " (기획서 확정치)" : " (선형보간 placeholder)");
-                so.delayBeforeWave = 5f;
+                so.delayBeforeWave = 10f;
                 so.waveDuration = 80f; // 기획서: 웨이브 80초
                 so.ownMonsterCount = 150; // 기획서: 웨이브마다 150마리
                 so.monsterPool = new List<MonsterDataSO>(monsterPool);

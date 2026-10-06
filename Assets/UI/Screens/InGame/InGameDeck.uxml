@@ -16,6 +16,6 @@
              자동으로 맨 아래에 옴. 값 자체는 소환 시(TowerPlacementController.OnTowerPlaced)마다
              MatchResourceManager.SummonSpCost(고정 10)만큼 늘어나는 순수 표시용 누적 카운터임
              (InGameDeckController.cs 참고). -->
-        <ui:Label name="sp-spent-label" text="SP 소모: 0" class="sp-spent-label"/>
+        <ui:Label name="sp-spent-label" text="다음 소환 SP: 100" class="sp-spent-label"/>
     </ui:VisualElement>
 </ui:UXML>

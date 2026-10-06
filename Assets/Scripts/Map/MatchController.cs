@@ -84,6 +84,16 @@ namespace TowerDefense.Map
         /// 조작(조진호) 해제 같은 "합성 시 처리" 스킬 로직이 여기에 붙으면 됨.</summary>
         public event Action<int, TowerUnit, TowerUnit> OnTowerMerged;
 
+        // 몬스터 스폰 순서 시드 - 매치마다 서버가 한 번 굴리고 양쪽 보드 스포너가 같이 씀(웨이브마다 +offset).
+        // 같은 웨이브에서 두 플레이어가 같은 종류 순서의 몬스터를 받게 해서 공정하게 함.
+        private int _matchSpawnSeed;
+
+        /// <summary>[서버] 웨이브 번호별 스폰 순서 시드. 같은 매치/같은 웨이브면 어느 보드에서 불러도 같은 값.</summary>
+        public int GetWaveSpawnSeed(int waveNumber)
+        {
+            return unchecked(_matchSpawnSeed + waveNumber * 7919);
+        }
+
         private readonly Dictionary<int, PlayerBoard> _boards = new();
         private Dictionary<string, CharacterDataSO> _characterLookup;
         private bool _matchStarted;
@@ -101,6 +111,18 @@ namespace TowerDefense.Map
         /// <summary>낙엽 날씨가 뜬 순간(웨이브당 1회) 발생 - 순수 시각 연출용(시야 가림, 지속시간 초 단위).
         /// InGameHUDController가 구독해서 화면 오버레이를 띄움(게임플레이 로직에는 영향 없음).</summary>
         public event Action<float> OnVisionBlockStarted;
+
+        /// <summary>내 보드의 웨이브 시작 전 대기가 시작됐을 때 발생(이 클라이언트 기준) - (웨이브 번호, 대기 초).
+        /// InGameHUDController가 구독해서 화면 중앙에 카운트다운을 표시함.</summary>
+        public event Action<int, float> OnWaveCountdownStarted;
+
+        [Rpc(SendTo.ClientsAndHost)]
+        private void WaveCountdownRpc(int boardIndex, int waveNumber, float seconds)
+        {
+            var mine = GetLocalBoard();
+            if (mine == null || mine.BoardIndex != boardIndex) return; // 상대 보드의 카운트다운은 표시하지 않음
+            OnWaveCountdownStarted?.Invoke(waveNumber, seconds);
+        }
 
         /// <summary>매치가 끝났을 때(승패/무승부 결정) 발생 - MatchOutcome은 "이 클라이언트 로컬 관점의 결과".
         /// UI(결과 팝업)가 이걸 구독해서 화면을 띄움 - Map 레이어가 UI를 직접 참조하지 않도록
@@ -128,6 +150,8 @@ namespace TowerDefense.Map
             if (IsClient) SubmitLoadoutRpc(PlayerLoadout.CaptureLocal().Pack());
 
             if (!IsServer) return;
+
+            _matchSpawnSeed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
 
             // using System(Action<bool> OnMatchEnded용으로 추가함) 때문에 System.Random이랑
             // UnityEngine.Random이 둘 다 시야에 들어와서 모호해짐 - 명시적으로 UnityEngine.Random을 지정함.
@@ -326,8 +350,8 @@ namespace TowerDefense.Map
             BoardSummonCostB.Value = boardB.Resources.NextSummonCost;
 
             // 몬스터 처치 SP는 그 몬스터가 속한 보드(스포너)의 지갑으로 들어감.
-            boardA.Spawner.OnSpRewardEvent += sp => boardA.Resources.AddSP(sp);
-            boardB.Spawner.OnSpRewardEvent += sp => boardB.Resources.AddSP(sp);
+            boardA.Spawner.OnSpRewardEvent += sp => boardA.Resources.AddRewardSP(sp);
+            boardB.Spawner.OnSpRewardEvent += sp => boardB.Resources.AddRewardSP(sp);
 
             // 몬스터 전송("넘어온 몬스터") - 한쪽에서 죽은 몬스터가 상대 보드로 넘어가려면 두
             // 스포너가 서로를 알아야 함. 인스펙터에서 미리 연결해두는 대신 여기서(양쪽 보드가
@@ -339,6 +363,8 @@ namespace TowerDefense.Map
             boardB.Spawner.SetCellSize(boardB.Grid.CellSize.x);
 
             // 20웨이브(보스전 포함)까지 양쪽 다 끝나면 하트 비교로 승패 판정(많은 쪽 승리, 같으면 무승부).
+            boardA.Spawner.OnWaveCountdown += (wave, seconds) => WaveCountdownRpc(0, wave, seconds);
+            boardB.Spawner.OnWaveCountdown += (wave, seconds) => WaveCountdownRpc(1, wave, seconds);
             boardA.Spawner.OnAllWavesSpawned += HandleBoardWavesFinished;
             boardB.Spawner.OnAllWavesSpawned += HandleBoardWavesFinished;
 
@@ -349,11 +375,27 @@ namespace TowerDefense.Map
             Debug.Log("[MatchController] 매치 시작 - 두 보드 웨이브 동시 개시.");
         }
 
-        private void HandleBaseDestroyed(int loserBoardIndex)
+        // 기지 파괴/항복은 바로 판정하지 않고 비트로 모았다가 같은 프레임의 LateUpdate에서 한 번에 판정함 -
+        // 같은 프레임에 양쪽 기지가 파괴되면 이벤트 처리 순서와 무관하게 무승부가 됨(기획 확정, 2026-10-06).
+        private int _destroyedBoardsMask; // bit0 = 보드 A, bit1 = 보드 B
+
+        private void HandleBaseDestroyed(int boardIndex)
         {
             if (!IsServer || _matchEnded) return;
+            _destroyedBoardsMask |= 1 << boardIndex;
+        }
+
+        private void LateUpdate()
+        {
+            if (_destroyedBoardsMask == 0 || !IsServer || _matchEnded) return;
+
+            int mask = _destroyedBoardsMask;
+            _destroyedBoardsMask = 0;
             _matchEnded = true;
-            MatchEndedRpc(loserBoardIndex);
+
+            int loser = mask == 3 ? DrawBoardIndex : (mask == 1 ? 0 : 1);
+            if (loser == DrawBoardIndex) Debug.Log("[MatchController] 양쪽 기지가 같은 프레임에 파괴됨 - 무승부.");
+            MatchEndedRpc(loser);
         }
 
         // MonsterSpawner.OnAllWavesSpawned는 마지막 웨이브의 보스전(보스 처치 또는 기지 도달)이 끝난 뒤
@@ -497,23 +539,23 @@ namespace TowerDefense.Map
             if (fromX == toX && fromY == toY) return;
 
             var fromCell = new Vector3Int(fromX, fromY, 0);
-            var from = TowerUnit.FindAtCell(board.Grid, fromCell);
-            var to = TowerUnit.FindAtCell(board.Grid, new Vector3Int(toX, toY, 0));
-            if (from == null || to == null || from == to) return;
-            if (from.Data == null || to.Data == null) return;
-            if (from.Data.characterId != to.Data.characterId) return;
-            if (from.Stars != to.Stars || to.Stars >= TowerProgression.MaxStars) return;
+            var fromTower = TowerUnit.FindAtCell(board.Grid, fromCell);
+            var toTower = TowerUnit.FindAtCell(board.Grid, new Vector3Int(toX, toY, 0));
+            if (fromTower == null || toTower == null || fromTower == toTower) return;
+            if (fromTower.Data == null || toTower.Data == null) return;
+            if (fromTower.Data.characterId != toTower.Data.characterId) return;
+            if (fromTower.Stars != toTower.Stars || toTower.Stars >= TowerProgression.MaxStars) return;
 
-            to.ApplyProgression(to.Stars + 1, GetEnhanceLevel(boardIndex, to.Data.characterId));
-            OnTowerMerged?.Invoke(boardIndex, to, from);
+            toTower.ApplyProgression(toTower.Stars + 1, GetEnhanceLevel(boardIndex, toTower.Data.characterId));
+            OnTowerMerged?.Invoke(boardIndex, toTower, fromTower);
 
             board.Grid.ReleaseCell(fromCell); // 슬롯 비우기
-            var fromObject = from.NetworkObject;
+            var fromObject = fromTower.NetworkObject;
             if (fromObject != null && fromObject.IsSpawned) fromObject.Despawn(true);
         }
 
         /// <summary>
-        /// [SP 강화] 캐릭터 종류 하나의 강화 레벨을 1 올림(Lv5까지, 구간 가격 500/1000/2500/5000 - 소속 가격 감소 노드 반영).
+        /// [SP 강화] 캐릭터 종류 하나의 강화 레벨을 1 올림(Lv5까지, 구간 가격 250/500/1250/2500 = 원가 1/2 - 소속 가격 감소 노드 반영).
         /// 필드에 그 캐릭터가 없어도 가능하고, 이미 필드에 있는 같은 캐릭터 전부에 즉시 적용됨. SP는 서버 지갑에서 차감.
         /// 강화 패널(UI)은 이 RPC를 호출하고 OnEnhanceLevelChanged를 구독하면 됨.
         /// </summary>
@@ -529,8 +571,11 @@ namespace TowerDefense.Map
             int baseCost = TowerProgression.GetEnhanceCost(level);
             if (baseCost <= 0) return; // 이미 최대 레벨
 
-            float discountPercent = ComputeEnhanceDiscountPercent(senderId, characterData);
-            int cost = Mathf.Max(0, Mathf.RoundToInt(baseCost * (1f - discountPercent / 100f)));
+            _loadouts.TryGetValue(senderId, out var senderLoadout);
+            float discountPercent = senderLoadout != null
+                ? NodeBonusCalculator.GetEnhanceDiscountPercent(characterData, senderLoadout.unlockedNodeIds)
+                : 0f;
+            int cost = NodeBonusCalculator.ApplyEnhanceDiscount(baseCost, discountPercent);
             if (cost > 0 && !board.Resources.TrySpendSP(cost)) return; // SP 부족
 
             level++;
@@ -548,6 +593,39 @@ namespace TowerDefense.Map
             EnhanceLevelChangedRpc(boardIndex, characterId, level);
         }
 
+        /// <summary>이 스포너가 속한 보드(타워가 자기 보드의 지갑 등에 접근할 때 씀). 없으면 null.</summary>
+        public PlayerBoard GetBoardBySpawner(MonsterSpawner spawner)
+        {
+            if (spawner == null) return null;
+            foreach (var board in _boards.Values)
+            {
+                if (board.Spawner == spawner) return board;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// [서버] 타워 하나의 합성 별을 1 줄임(1★이면 제거) - 상대 필드에 거는 스킬(쇼타 '암살')용. 보호막 판정은 호출하는 스킬이 먼저 함.
+        /// 제거할 때는 칸 점유를 풀고 네트워크 스폰도 해제함(합성으로 사라지는 타워와 같은 처리).
+        /// </summary>
+        public bool ReduceTowerStar(TowerUnit target)
+        {
+            if (!IsServer || target == null || target.Data == null) return false;
+            var board = GetBoardBySpawner(target.OwnBoardSpawner);
+            if (board == null) return false;
+
+            if (target.Stars > 1)
+            {
+                target.ApplyProgression(target.Stars - 1, GetEnhanceLevel(board.BoardIndex, target.Data.characterId));
+                return true;
+            }
+
+            board.Grid.ReleaseCell(board.Grid.WorldToCell(target.transform.position));
+            var networkObject = target.NetworkObject;
+            if (networkObject != null && networkObject.IsSpawned) networkObject.Despawn(true);
+            return true;
+        }
+
         [Rpc(SendTo.ClientsAndHost)]
         private void EnhanceLevelChangedRpc(int boardIndex, string characterId, int level)
         {
@@ -555,17 +633,6 @@ namespace TowerDefense.Map
             OnEnhanceLevelChanged?.Invoke(boardIndex, characterId, level);
         }
 
-        // 소속 라인 노드의 "SP 강화 가격 -n%" 합(무소속은 소속 효과를 받지 않음). 수치 [미정]이라 지금은 0.
-        private float ComputeEnhanceDiscountPercent(ulong ownerClientId, CharacterDataSO character)
-        {
-            var tree = TechTreeManager.Instance;
-            if (tree == null || !NodeTreeLines.ReceivesLineEffect(character.code)) return 0f;
-            if (!_loadouts.TryGetValue(ownerClientId, out var loadout)) return 0f;
-
-            string line = NodeTreeLines.GetLine(character.code);
-            float percent = tree.GetBonusPercent(NodeEffectType.LineEnhancePriceDiscountPercent, line, loadout.unlockedNodeIds);
-            return Mathf.Clamp(percent, 0f, 100f);
-        }
 
         // 스프라이트의 "스케일 1일 때 월드 크기"(SpriteRenderer.sprite.bounds.size) 대비 그리드 한 칸
         // 크기의 비율로 균일 스케일을 구함. 가로/세로 중 더 작은 쪽 기준으로 잡아서(Mathf.Min), 정사각형이
