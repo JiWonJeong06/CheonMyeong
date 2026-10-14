@@ -1,0 +1,1038 @@
+{
+  "version": "2026-10-02",
+  "source": "천명_통합.xlsx / 캐릭터 스탯 + 스킬 밸런싱",
+  "maxSkillLevel": 7,
+  "characters": [
+    {
+      "code": 1000,
+      "name": "이유라",
+      "weapon": "칼",
+      "attackType": "Melee",
+      "attackPower": 90,
+      "attackInterval": 1.2,
+      "range": 1,
+      "targetPriority": "Front",
+      "growthAttackPower": 4,
+      "growthAttackInterval": -0.03,
+      "gaugePerHit": 18,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 550,
+      "passive": {
+        "name": "처단",
+        "description": "5번째 공격마다 추가 공격력(n+공격력의 150%)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "5번째 공격 추가 고정 피해 n (+ 공격력 150%)",
+            "values": [75, 90, 110, 130, 160, 200, 245, 300]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "필사즉생",
+        "description": "체력 n% 이하 처형(보스 제외)[지속시간: 12초]",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "처형 체력 n% (보스 제외, 12초)",
+            "values": [8, 9, 10, 11, 13, 15, 17, 20]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1001,
+      "name": "박재혁",
+      "weapon": "단검/우산",
+      "attackType": "Melee",
+      "attackPower": 90,
+      "attackInterval": 0.9,
+      "range": 1,
+      "targetPriority": "Front",
+      "growthAttackPower": 5,
+      "growthAttackInterval": -0.02,
+      "gaugePerHit": 14,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 550,
+      "passive": {
+        "name": "단검",
+        "description": "단검을 이용하며, 공격속도 n%를 얻습니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "공격속도 n% 증가",
+            "values": [15, 17, 19, 21, 25, 29, 34, 40]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "무기교체",
+        "description": "(11초 동안) 우산(장검)을 이용합니다. 사거리가 +1 만큼 늘어나고, 공격력 n% 증가합니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "11초 동안 공격력 n% 증가 (사거리 +1)",
+            "values": [100, 105, 115, 125, 140, 155, 175, 200]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1002,
+      "name": "손강재",
+      "weapon": "활",
+      "attackType": "Ranged",
+      "attackPower": 86,
+      "attackInterval": 1,
+      "range": 5,
+      "targetPriority": "Front",
+      "growthAttackPower": 5,
+      "growthAttackInterval": -0.02,
+      "gaugePerHit": 15,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 400,
+      "passive": {
+        "name": "명사수",
+        "description": "평타를 공격할 떄 마다 n% 만큼 뒤로 밀어 냅니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "평타 넉백 n%",
+            "values": [2, 2.2, 2.4, 2.8, 3.1, 3.6, 4.2, 5]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "연속 공격",
+        "description": "(15초 동안) 맨 앞 3명을 공격하고, 공격속도가 n% 증가합니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "15초 동안 공격속도 n% 증가",
+            "values": [20, 22, 24, 28, 31, 36, 42, 50]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1003,
+      "name": "최유정",
+      "weapon": "조총",
+      "attackType": "Ranged",
+      "attackPower": 124,
+      "attackInterval": 2,
+      "range": 6,
+      "targetPriority": "HighestHp",
+      "growthAttackPower": 11,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 30,
+      "killType": "Sniper",
+      "gaugePerKill": 15,
+      "ultimateGauge": 350,
+      "passive": {
+        "name": "헤드샷",
+        "description": "15% 확률로 헤드샷 조준으로 공격력 n% 피해를 입힙니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "헤드샷(15% 확률) 피해 공격력 n%",
+            "values": [300, 310, 330, 350, 380, 410, 450, 500]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "덫",
+        "description": "사거리 내에 있는 길에 덫을 n개 뿌립니다. 지나간 적이 덫에 걸리면, 1.5초 동안 이동이 제한 됩니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "덫 n개 (1.5초 속박)",
+            "values": [3, 4, 4, 4, 5, 5, 6, 6]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1004,
+      "name": "하영",
+      "weapon": "칼",
+      "attackType": "Melee",
+      "attackPower": 115,
+      "attackInterval": 1.5,
+      "range": 1,
+      "targetPriority": "Front",
+      "growthAttackPower": 14,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 12,
+      "killType": "Normal",
+      "gaugePerKill": 5,
+      "ultimateGauge": 77,
+      "passive": {
+        "name": "혼오의 깃",
+        "description": "타격 시 1의 '까마귀' 스택을 쌓고, n% 확률로 1스택을 더 쌓는다. (최대 15스택)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "타격 시 스택 1개 + n% 확률로 1개 추가 (최대 15스택)",
+            "values": [0, 5, 15, 25, 40, 55, 75, 100]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "혼오의 일격",
+        "description": "까마귀 스택이 적용된 몬스터에게 (까마귀 스택 × 공격력의 n%) 대미지를 넣는 참격을 발사한다. 모든 스택을 잃는다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "스택당 공격력 n% 참격",
+            "values": [50, 51, 53, 55, 58, 61, 65, 70]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1005,
+      "name": "홍훈",
+      "weapon": "전기",
+      "attackType": "Ranged",
+      "attackPower": 84,
+      "attackInterval": 1.2,
+      "range": 3,
+      "targetPriority": "Front",
+      "growthAttackPower": 4,
+      "growthAttackInterval": -0.03,
+      "gaugePerHit": 18,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 800,
+      "passive": {
+        "name": "번개",
+        "description": "5번째 공격마다 n초 기절 부여",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "5번째 공격마다 n초 기절",
+            "values": [1, 1.05, 1.15, 1.25, 1.4, 1.55, 1.75, 2]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "천둥의 신",
+        "description": "필드 전체에 (n + 공격력 150%) 피해를 3번 입히고 1.5초 동안 기절을 부여한다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "필드 전체 (n + 공격력 150%) 피해 × 3회, 1.5초 기절",
+            "values": [50, 60, 70, 90, 105, 130, 160, 200]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1500,
+      "name": "김도현",
+      "weapon": "권총",
+      "attackType": "Ranged",
+      "attackPower": 66,
+      "attackInterval": 0.6,
+      "range": 4,
+      "targetPriority": "Front",
+      "growthAttackPower": 6,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 9,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 500,
+      "passive": {
+        "name": "암흑 총알",
+        "description": "7발 (M1900)\n마지막 발 (공격력의 n%)공격 강화(재장전시간 1.75초)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "7번째 탄 공격력 n% (재장전 1.75초)",
+            "values": [250, 270, 290, 310, 350, 390, 440, 500]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "어둠의 쌍권총",
+        "description": "(8초 동안) 패시브 효과 마지막 발 효과를 받습니다.\nn 만큼 사거리 증가 [재장전을 하지 않습니다.]",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "8초 동안 사거리 +n (모든 탄이 7번째 탄 효과)",
+            "values": [1, 1.1, 1.3, 1.5, 1.8, 2.1, 2.5, 3]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1501,
+      "name": "임성재",
+      "weapon": "쌍절곤",
+      "attackType": "Melee",
+      "attackPower": 98,
+      "attackInterval": 1,
+      "range": 1,
+      "targetPriority": "Front",
+      "growthAttackPower": 8,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 15,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 450,
+      "passive": {
+        "name": "기합",
+        "description": "아군 전체 추가 공격력 n% 부여 (중첩 X, 패시브 강화가 가장 강한 '임성재'만 적용)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "아군 전체 공격력 n% (중첩 X)",
+            "values": [4, 4.5, 5.5, 7, 8, 10, 12, 15]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "충전",
+        "description": "(9초 동안) 적에게 결정타를 하면 영구적인 추가 공격력 +n을 얻습니다. (한 판 최대 +공격력의 100%)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "9초 동안 결정타당 영구 공격력 +n (한 판 최대 공격력의 100%)",
+            "values": [1, 1.1, 1.3, 1.5, 1.8, 2.1, 2.5, 3]
+          }
+        ]
+      }
+    },
+    {
+      "code": 1502,
+      "name": "서윤아",
+      "weapon": "마법",
+      "attackType": "Ranged",
+      "attackPower": 64,
+      "attackInterval": 1.3,
+      "range": 5,
+      "targetPriority": "Front",
+      "growthAttackPower": 3,
+      "growthAttackInterval": -0.03,
+      "gaugePerHit": 20,
+      "killType": "Area",
+      "gaugePerKill": 5,
+      "ultimateGauge": 600,
+      "passive": {
+        "name": "굴절",
+        "description": "평타가 가까운 적 2명에게 추가로 튕기며,\n 튕긴 공격은 n% 피해를 입힌다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "튕긴 공격 피해 n% (2명)",
+            "values": [35, 37, 40, 44, 48, 54, 61, 70]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "백야",
+        "description": "(10초 동안) 사거리 내 적이 받는 모든 피해가 n% 증가 한다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "10초 동안 받는 피해 n% 증가",
+            "values": [10, 11, 12, 14, 16, 18, 21, 25]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2000,
+      "name": "윤재훈",
+      "weapon": "지팡이(나무)",
+      "attackType": "Ranged",
+      "attackPower": 81,
+      "attackInterval": 1.5,
+      "range": 5,
+      "targetPriority": "Front",
+      "growthAttackPower": 7,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 23,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 600,
+      "passive": {
+        "name": "온전한 마음",
+        "description": "10초간 상대 캐릭터 공격속도 n% 저하\n(쿨타임 : 40초)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "10초간 상대 캐릭터 공격속도 n% 저하 (쿨 40초)",
+            "values": [8, 9, 10, 11, 13, 15, 17, 20]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "세계수의 축복",
+        "description": "(6초 동안 반경 내)근처 캐릭터 30% 공격속도 및 자신의 공격력 n% + 효과로 부여",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "6초 동안 근처 아군에게 자신 공격력의 n% 부여 (+ 공속 30%)",
+            "values": [10, 11, 13, 15, 18, 21, 25, 30]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2001,
+      "name": "송서현",
+      "weapon": "기창",
+      "attackType": "Melee",
+      "attackPower": 119,
+      "attackInterval": 1.3,
+      "range": 1.5,
+      "targetPriority": "LowestHp",
+      "growthAttackPower": 10,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 20,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 700,
+      "passive": {
+        "name": "돌격",
+        "description": "처음 공격한 적에게 (n +공격력의 200%) 피해를 입힌다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "첫 공격 추가 고정 피해 n (+ 공격력 200%)",
+            "values": [60, 70, 80, 90, 105, 125, 150, 180]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "여포의 난",
+        "description": "말을 타고, 경로를 따라 돌진합니다. 경로 위 모든 적은 0.5초 동안 기절이 걸리며,공격력의 n% 피해를 입힙니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "돌진 경로 공격력 n% (+ 0.5초 기절)",
+            "values": [150, 160, 170, 190, 205, 230, 260, 300]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2002,
+      "name": "한민성",
+      "weapon": "당파",
+      "attackType": "Melee",
+      "attackPower": 134,
+      "attackInterval": 1.4,
+      "range": 1.5,
+      "targetPriority": "HighestHp",
+      "growthAttackPower": 11,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 21,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 800,
+      "passive": {
+        "name": "너가 나보다 강해?",
+        "description": "대형몬스터 및 보스에게 주는 피해가 n% 증가합니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "대형·보스 피해 n% 증가",
+            "values": [25, 27, 30, 34, 38, 44, 51, 60]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "병사들아 도움요청!",
+        "description": "(10초 동안) 사거리 내 병사를 2명을 소환합니다. 병사는 소환자의 공격력 n%를 물려 받으며, 패시브도 같이 적용 됩니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "병사 2명이 공격력 n% 물려받음 (10초)",
+            "values": [60, 63, 66, 70, 75, 82, 90, 100]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2003,
+      "name": "신세헌",
+      "weapon": "물",
+      "attackType": "Ranged",
+      "attackPower": 113,
+      "attackInterval": 1.4,
+      "range": 4,
+      "targetPriority": "Front",
+      "growthAttackPower": 10,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 21,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 600,
+      "passive": {
+        "name": "산성 비",
+        "description": "(n초마다) 산성 비를 내려, 몬스터의\n 보호막을 파괴 합니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "산성 비 주기 n초 (짧을수록 좋음)",
+            "values": [20, 19.5, 18.5, 17.5, 16, 14.5, 12.5, 10]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "수룡진",
+        "description": "수룡이 경로에 따라 지나갑니다. 보호막을 파괴하고, 공격력의 n% 피해를 입니다",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "수룡진 공격력 n% (보호막 파괴)",
+            "values": [150, 160, 170, 190, 205, 230, 260, 300]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2500,
+      "name": "박성훈",
+      "weapon": "철퇴",
+      "attackType": "Melee",
+      "attackPower": 161,
+      "attackInterval": 1.4,
+      "range": 1,
+      "targetPriority": "Front",
+      "growthAttackPower": 8,
+      "growthAttackInterval": -0.03,
+      "gaugePerHit": 21,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 650,
+      "passive": {
+        "name": "기절 강타",
+        "description": "n% 확률로 기본 공격이 1.75초 동안 기절이 부여 됩니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "평타 n% 확률로 1.75초 기절",
+            "values": [5, 5.5, 6, 7, 7.5, 9, 10, 12]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "주작의 춤",
+        "description": "맵을 가로지르는 주작을 소환, 공격력의 n% 피해 입힌다. 화상이 부여 됩니다. [화상: 3초동안 초당 몬스터의 최대 체력 3%를 감소합니다. 단, 보스는 1.5%]",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "주작 공격력 n% + 화상",
+            "values": [150, 160, 170, 190, 205, 230, 260, 300]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2501,
+      "name": "진혜영",
+      "weapon": "붓",
+      "attackType": "Melee",
+      "attackPower": 97,
+      "attackInterval": 1.2,
+      "range": 1,
+      "targetPriority": "Front",
+      "growthAttackPower": 8,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 18,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 320,
+      "passive": {
+        "name": "먹",
+        "description": "먹을 던져, 일부 필드 부분이 n% 만큼 속도 저하가 부여 됩니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "먹 지역 감속 n%",
+            "values": [8, 9, 10, 11, 13, 15, 17, 20]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "붓",
+        "description": "(10초 동안)상대 필드에 추가 이속 n% 부여합니다. (중첩 가능, 최대 30%)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "상대 필드 10초 이속 n% 증가 (중첩, 최대 30%)",
+            "values": [5, 5.5, 6.5, 7.5, 9, 10.5, 12.5, 15]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2502,
+      "name": "정다희",
+      "weapon": "표창",
+      "attackType": "Ranged",
+      "attackPower": 80,
+      "attackInterval": 1.2,
+      "range": 3,
+      "targetPriority": "Front",
+      "growthAttackPower": 4,
+      "growthAttackInterval": -0.03,
+      "gaugePerHit": 18,
+      "killType": "Area",
+      "gaugePerKill": 5,
+      "ultimateGauge": 200,
+      "passive": {
+        "name": "표창",
+        "description": "일자로 날아가는 3개의 표창을 던집니다. (표창 공격력의 n%)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "표창 3개, 개당 공격력 n%",
+            "values": [50, 51, 53, 55, 58, 61, 65, 70]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "부채꼴",
+        "description": "(11초 동안) 부채꼴로 날아가는 6개의 표창을 던집니다. (표창 공격력 n%)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "표창 6개, 개당 공격력 n%",
+            "values": [100, 105, 115, 125, 140, 155, 175, 200]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2503,
+      "name": "남궁진",
+      "weapon": "게베어 1871",
+      "attackType": "Ranged",
+      "attackPower": 156,
+      "attackInterval": 2.2,
+      "range": 6,
+      "targetPriority": "HighestHp",
+      "growthAttackPower": 8,
+      "growthAttackInterval": -0.05,
+      "gaugePerHit": 33,
+      "killType": "Sniper",
+      "gaugePerKill": 15,
+      "ultimateGauge": 500,
+      "passive": {
+        "name": "부패",
+        "description": "같은 적을 공격 할 때 마다 피해가 n% 증가 합니다. (최대 3중첩,(n*3) 대상이 바뀌면 초기화)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "같은 적 공격 시 피해 n% 증가 (최대 3중첩)",
+            "values": [10, 11, 12, 14, 16, 18, 21, 25]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "암살 지령",
+        "description": "필드 내 가장 높은 적 1명을 저격 하여, 공격력 n% 피해를 입힙니다.( 보스 (n*0.5) % )",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "저격 공격력 n% (보스는 절반)",
+            "values": [800, 850, 920, 1000, 1110, 1240, 1400, 1600]
+          }
+        ]
+      }
+    },
+    {
+      "code": 2504,
+      "name": "홍한",
+      "weapon": "주먹",
+      "attackType": "Melee",
+      "attackPower": 67,
+      "attackInterval": 0.7,
+      "range": 1,
+      "targetPriority": "Front",
+      "growthAttackPower": 3,
+      "growthAttackInterval": -0.02,
+      "gaugePerHit": 11,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 450,
+      "passive": {
+        "name": "연타",
+        "description": "공격할 때 마다 공격속도가 3% 증가합니다. (최대 n중첩, 3초간 공격을 하지 않으면 초기화)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "공격속도 3% 중첩, 최대 n회",
+            "values": [8, 9, 10, 11, 13, 15, 17, 20]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "무골권",
+        "description": "(n초 동안) 공격속도가 100% 증가 하고, 두 번 공격 합니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "n초 동안 공격속도 100% + 2회 공격",
+            "values": [5, 5.3, 5.7, 6.3, 6.9, 7.7, 8.7, 10]
+          }
+        ]
+      }
+    },
+    {
+      "code": 3000,
+      "name": "김형욱",
+      "weapon": "도끼",
+      "attackType": "Melee",
+      "attackPower": 147,
+      "attackInterval": 1.6,
+      "range": 1,
+      "targetPriority": "Front",
+      "growthAttackPower": 8,
+      "growthAttackInterval": -0.03,
+      "gaugePerHit": 24,
+      "killType": "Area",
+      "gaugePerKill": 5,
+      "ultimateGauge": 300,
+      "passive": {
+        "name": "내려찍기",
+        "description": "공격을 할 때마다, 주변 적에게 공격력의 n% 피해를 입힙니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "주변 적 공격력 n%",
+            "values": [25, 27, 29, 31, 35, 39, 44, 50]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "불도끼",
+        "description": "공격 시 화상을 부여 합니다. 강화 시 화상 효과가 강화 됩니다. [화상: 3초동안 초당 몬스터의 최대 체력 n%를 감소합니다. 단, 보스는 (n*0.5)% ]",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "화상: 3초간 초당 최대 체력 n% (보스 절반)",
+            "values": [1.5, 1.7, 1.9, 2.1, 2.5, 2.9, 3.4, 4]
+          }
+        ]
+      }
+    },
+    {
+      "code": 3001,
+      "name": "전민재",
+      "weapon": "방패",
+      "attackType": "Ranged",
+      "attackPower": 100,
+      "attackInterval": 1.8,
+      "range": 3,
+      "targetPriority": "Front",
+      "growthAttackPower": 5,
+      "growthAttackInterval": -0.04,
+      "gaugePerHit": 27,
+      "killType": "Area",
+      "gaugePerKill": 5,
+      "ultimateGauge": 200,
+      "passive": {
+        "name": "부메랑 방패",
+        "description": "방패를 던져 적을 공격합니다. 공격력의 n% 피해를 입히고, 돌아오는 피해는 (n*0.7)% 입힙니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "부메랑 공격력 n% (돌아올 때 × 0.7)",
+            "values": [90, 93, 96, 100, 105, 112, 120, 130]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "방패",
+        "description": "(n초 동안) 사거리 내 방패를 3개 소환하여 길을 막습니다",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "방패 3개로 길 막기 n초",
+            "values": [2, 2.1, 2.2, 2.4, 2.6, 2.8, 3.1, 3.5]
+          }
+        ]
+      }
+    },
+    {
+      "code": 3002,
+      "name": "유하린",
+      "weapon": "거울",
+      "attackType": "Ranged",
+      "attackPower": 95,
+      "attackInterval": 1.4,
+      "range": 5,
+      "targetPriority": "Front",
+      "growthAttackPower": 8,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 21,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 630,
+      "passive": {
+        "name": "불완전 보호",
+        "description": "n초 마다 랜덤한 아군에게 보호막 부여 (중첩 X), 본인은 소환 시 보호막이 부여 됩니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "보호막 주기 n초 (짧을수록 좋음)",
+            "values": [120, 115, 110, 105, 95, 85, 75, 60]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "작은 별",
+        "description": "랜덤한 상대 캐릭터 2명 에게 별똥별을 떨어트립니다. 맞은 적은 (n초 동안) 대미지가 회복으로 전환 됩니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "별똥별 맞은 상대 캐릭터 2명, n초 동안 피해 → 회복 전환",
+            "values": [2, 2.1, 2.3, 2.5, 2.8, 3.1, 3.5, 4]
+          }
+        ]
+      }
+    },
+    {
+      "code": 3500,
+      "name": "서혁호",
+      "weapon": "너클",
+      "attackType": "Melee",
+      "attackPower": 130,
+      "attackInterval": 1.3,
+      "range": 1,
+      "targetPriority": "Front",
+      "growthAttackPower": 11,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 20,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 650,
+      "passive": {
+        "name": "환경 적응",
+        "description": "사거리 내 적 1명당 대미지 n% 증가 (최대 5명)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "사거리 내 적 1명당 피해 n% 증가 (최대 5명)",
+            "values": [6, 6.5, 7, 7.5, 8.5, 9.5, 10.5, 12]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "지반 붕괴",
+        "description": "지반을 강타해 전방의 \n적중 당한 대상에게 30% '속도저하'를 5초 부여하고,\nn% 피해를 입힌다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "지반 붕괴 공격력 n% (+ 30% 감속 5초)",
+            "values": [250, 260, 280, 300, 330, 360, 400, 450]
+          }
+        ]
+      }
+    },
+    {
+      "code": 3501,
+      "name": "백하은",
+      "weapon": "쇠뇌(천보노)",
+      "attackType": "Ranged",
+      "attackPower": 101,
+      "attackInterval": 1.6,
+      "range": 5.5,
+      "targetPriority": "Front",
+      "growthAttackPower": 6,
+      "growthAttackInterval": -0.03,
+      "gaugePerHit": 24,
+      "killType": "Area",
+      "gaugePerKill": 5,
+      "ultimateGauge": 550,
+      "passive": {
+        "name": "관통하는 화살",
+        "description": "화살이 일직선상 모든 적을 관통하며, 적이 지나갈 때 마다 n% 줄어든다",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "관통할 때마다 피해 n% 감소 (낮을수록 좋음)",
+            "values": [30, 29, 27, 25, 22, 19, 15, 10]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "화살비",
+        "description": "(6초 동안 )사거리 내 경로 부분에 화살비를 내려 초당 공격력 n%를 입힙니다. 이동속도 20% 낮춘다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "6초 화살비 초당 공격력 n% (+ 20% 감속)",
+            "values": [70, 75, 80, 90, 95, 110, 120, 140]
+          }
+        ]
+      }
+    },
+    {
+      "code": 3502,
+      "name": "천희재",
+      "weapon": "장창",
+      "attackType": "Melee",
+      "attackPower": 109,
+      "attackInterval": 1.3,
+      "range": 2,
+      "targetPriority": "Front",
+      "growthAttackPower": 9,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 20,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 500,
+      "passive": {
+        "name": "진격",
+        "description": "30초마다 적팀한테 진격합니다.(10초 동안) 적의 경로 이동속도가 n% 증가합니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "10초 동안 상대 이속 n% 증가 (30초마다)",
+            "values": [8, 9, 10, 11, 13, 15, 17, 20]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "사기 증가",
+        "description": "아군 모든 근접 캐릭터들이 공격력이 n% 씩 증가하고, 사거리 +1이 증가합니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "아군 근접 공격력 n% + 사거리 1",
+            "values": [12, 13, 14, 15, 17, 19, 22, 25]
+          }
+        ]
+      }
+    },
+    {
+      "code": 4000,
+      "name": "강민준",
+      "weapon": "대검",
+      "attackType": "Melee",
+      "attackPower": 131,
+      "attackInterval": 1.5,
+      "range": 1.25,
+      "targetPriority": "Front",
+      "growthAttackPower": 6,
+      "growthAttackInterval": -0.04,
+      "gaugePerHit": 23,
+      "killType": "Area",
+      "gaugePerKill": 5,
+      "ultimateGauge": 625,
+      "passive": {
+        "name": "수증기 대검",
+        "description": "공격할 때마다 열기 1스택을 쌓고, 10스택이 되면 폭발하여 공격력의 n% 피해를 주고, 주변에 공격력 (n×0.4)% 피해를 입힙니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "10스택 폭발 공격력 n% (주변 × 0.4)",
+            "values": [200, 210, 230, 250, 280, 310, 350, 400]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "수증기 폭발",
+        "description": "사거리 만큼 수증기 폭발을 일이켜 공격력 n% 입히고, (12초 동안) 열기 6스택을 얻고, 공격 할 때 마다 2스택씩 중첩 됩니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "수증기 폭발 공격력 n%",
+            "values": [300, 320, 340, 360, 400, 440, 490, 550]
+          }
+        ]
+      }
+    },
+    {
+      "code": 4001,
+      "name": "임서연",
+      "weapon": "마법진",
+      "attackType": "Ranged",
+      "attackPower": 77,
+      "attackInterval": 1,
+      "range": 8,
+      "targetPriority": "HighestHp",
+      "growthAttackPower": 7,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 15,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 400,
+      "passive": {
+        "name": "심안",
+        "description": "공격력 n% ~ m% 레이저를 발사하여, 초 마다 공격력이 점점 증가합니다. ( 10초 최고 공격 도달)타겟이 바뀌면 초기화)",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "레이저 시작 공격력 n%",
+            "values": [30, 32, 34, 38, 41, 46, 52, 60]
+          },
+          {
+            "key": "m",
+            "meaning": "레이저 최대 공격력 m% (10초 도달)",
+            "values": [150, 160, 170, 190, 205, 230, 260, 300]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "심안 강화",
+        "description": "(n초 동안) \"심안\" 스킬이 초기화 되지 않습니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "n초 동안 심안 초기화 없음",
+            "values": [8, 8.3, 8.7, 9.3, 9.9, 10.7, 11.7, 13]
+          }
+        ]
+      }
+    },
+    {
+      "code": 4002,
+      "name": "쇼타",
+      "weapon": "이도류",
+      "attackType": "Melee",
+      "attackPower": 83,
+      "attackInterval": 0.8,
+      "range": 1,
+      "targetPriority": "Front",
+      "growthAttackPower": 7,
+      "growthAttackInterval": 0,
+      "gaugePerHit": 12,
+      "killType": "Normal",
+      "gaugePerKill": 10,
+      "ultimateGauge": 500,
+      "passive": {
+        "name": "해일",
+        "description": "90초 마다 큰파도를 형성해 적들을 진행방향의 반대로 n% 대미지를 주며 밀어낸다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "해일 공격력 n% + 밀어내기 (90초마다)",
+            "values": [150, 160, 170, 190, 205, 230, 260, 300]
+          }
+        ]
+      },
+      "ultimate": {
+        "name": "암살",
+        "description": "적을 암살 시도합니다. n% 확률로 적 캐릭터를(상대 필드) 제거합니다.",
+        "parameters": [
+          {
+            "key": "n",
+            "meaning": "n% 확률로 상대 필드의 캐릭터 1명 제거",
+            "values": [3, 3.3, 3.7, 4.3, 4.9, 5.7, 6.7, 8]
+          }
+        ]
+      }
+    }
+  ]
+}
